@@ -1,13 +1,18 @@
-@extends('layout.admin')
+{% extends 'layout/admin.html' %}
 
-@section('content')
+{% block content %}
 <div class="container py-4">
     <h2>Add New Product</h2>
 
+    {% with messages = get_flashed_messages(with_categories=true)%}
+        {% if messages %}
+            {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <form method="POST" action="/admin/products/store" enctype="multipart/form-data">
-
-        @csrf
-
         <div class="mb-3">
             <label for="category" class="form-label">Category</label>
             <select name="category" class="form-select" required>
@@ -19,14 +24,13 @@
 
         <div class="mb-3">
             <label for="name" class="form-label">Product Name</label>
-            <input type="text" name="name" class="form-control" required>
+            <input type="text" name='name' class='form-control' required>
         </div>
 
         <div class="mb-3">
             <label for="image" class="form-label">Upload Image</label>
-            <input type="file" name="image" class="form-control">
+            <input type="file" name="image" class="form-control" required>
         </div>
-
 
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>
@@ -35,16 +39,16 @@
 
         <div class="mb-3">
             <label for="price" class="form-label">Price (₱)</label>
-            <input type="number" name="price" class="form-control" step="0.01" required>
+            <input type="number" name="price" class="form-control" min="1" required>
         </div>
 
         <div class="mb-3">
             <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" name="quantity" class="form-control" required>
+            <input type="number" name="quantity" class="form-control" min="1" required>
         </div>
 
         <button type="submit" class="btn btn-success">Add Product</button>
-        <a href="{{ url('/admin/products') }}" class="btn btn-secondary">Back</a>
+        <a href="/admin/dashboard" class="btn btn-secondary">Back</a>
     </form>
 </div>
-@endsection
+{% endblock %}

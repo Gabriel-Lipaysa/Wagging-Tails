@@ -101,29 +101,22 @@
                 {% endif %}
             {% endwith %}
             
-            <form action="/admin" method="POST">
-                {{ form.hidden_tag() }}
+            <form action="/login/admin" method="POST">
                 <div class="mb-3 text-start">
-                    {{ form.username.label(class='form-label')}}
-                    {{ form.username(class='form-control')}}
-                    {% for error in form.username.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
+                    <label for="username" class="form-label">Username</label>
+                    <input name="username" type="text" class="form-control" required>
                 </div>
                 <div class="mb-2 text-start">
-                    {{ form.password.label(class='form-label') }}
+                    <label for="password" class="form-label">Password</label>
                     <div class="input-group">
-                        {{ form.password(class='form-control', id='password') }}
+                        <input name="password" type="password" class="form-control" id="password" required>
                         <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
                             <i class="bi bi-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
-                    {% for error in form.password.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                    {% endfor %}
                 </div>
                 <br>
-                {{ form.submit(class='btn btn-login w-100 py-2 text-white') }}
+                <button type="submit" class="btn btn-login w-100 py-2 text-white">Log In</button>
             </form>
         </div>
     </div>

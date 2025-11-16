@@ -91,11 +91,8 @@
               {% endif %}
             {% endwith %}
 
-            <form action="{{ url_for('show_user_signup') }}" method="POST">
-                {# CSRF token if using Flask-WTF #}
-                {% if form and form.csrf_token %}
-                    {{ form.csrf_token }}
-                {% endif %}
+            <form action="{{ url_for('user.show_user_signup') }}" method="POST">
+                
 
                 <div class="mb-3 text-start">
                     <label for="name" class="form-label">Full Name</label>
@@ -136,7 +133,7 @@
 
                 <div class="mt-3">
                     <small>Already have an Account? 
-                        <a href="{{ url_for('show_user_login') }}">Log in</a>
+                        <a href="{{ url_for('user.show_user_login') }}">Log in</a>
                     </small>
                 </div>
             </form>

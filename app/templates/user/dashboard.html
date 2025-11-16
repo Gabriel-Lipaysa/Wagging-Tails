@@ -1,6 +1,6 @@
-@extends('layout.user')
+{% extends 'layout/user.html' %}
 
-@section('content')
+{% block content %}
 <div class="container-fluid">
     <div class="row align-items-center" style="min-height: 80vh;">
         <!-- Left Section: Text and Button -->
@@ -17,11 +17,7 @@
         </div>
         <!-- Right Section: Image Placeholder -->
         <div class="col-md-6 text-center">
-<<<<<<< HEAD
             <img src="{{ url_for('static', filename='images/image2.png') }}" alt="Dog and Cat" style="max-height: 650px; width: 100%; object-fit: contain;">
-=======
-            <img src="{{ asset('images/image2.png') }}" alt="Dog and Cat" style="max-height: 650px; width: 100%; object-fit: contain;">
->>>>>>> 4d8501a9645ae7334eb7498fbc11ac6038fc7078
         </div>
     </div>
 </div>
@@ -170,4 +166,4 @@ function markAsReceived(orderId) {
     });
 }
 </script>
-@endsection
+{% endblock %}
