@@ -1,0 +1,419 @@
+
+
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Load Cart Items (already present)
+        function loadCartItems() {
+            $.ajax({
+                url: "{{ url_for('user.cart_items') }}",
+                method: 'GET',
+                success: function (response) {
+                    const cartItemsContainer = document.getElementById('cart-items');
+                    let total = 0;
+                    cartItemsContainer.innerHTML = ''; // 🧽 Clear existing
+
+                    if (response.length > 0) {
+                        response.forEach(item => {
+                            total += item.price * item.quantity;
+                            cartItemsContainer.innerHTML += `
+                        <div class="card mb-3 shadow-sm border-0 rounded" style="max-width: 100%; background-color: #f9f9f9;" id="cart-item-${item.id}">
+                            <div class="card-body d-flex justify-content-between">
+                                <div class="d-flex flex-column">
+                                    <p class="fw-bold mb-1">${item.name}</p>
+                                    <p>₱${item.price} x
+                                        <div class="input-group" style="max-width: 160px;">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(${item.id}, 'decrease')">-</button>
+                                            <input type="number" id="quantity-${item.id}" class="form-control text-center" value="${item.quantity}" min="1" onchange="updateQuantityManually(${item.id})">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(${item.id}, 'increase')">+</button>
+                                        </div>
+                                    </p>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" id="select-item-${item.id}" class="select-item" data-id="${item.id}" onclick="toggleSelection()">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                        });
+                        cartItemsContainer.innerHTML += `<p class="fw-bold mt-3">Total: ₱${total}</p>`;
+                    } else {
+                        cartItemsContainer.innerHTML = `<p>Your cart is empty</p>`;
+                    }
+                }
+            });
+        }
+
+        // Preload all sidebar data on page load
+        loadCartItems();
+        loadMyOrders();
+        loadMyHistory();
+        loadMyReviews();
+
+        // Handle remove selected items
+        document.getElementById('remove-selected').addEventListener('click', function () {
+            const selectedItems = getSelectedItems();
+            if (selectedItems.length > 0) {
+                $.ajax({
+                    url: '/cart/remove-selected',
+                    method: 'POST',
+                    data: {
+                        selected_items: selectedItems
+                    },
+                    success: function (response) {
+                        alert('Selected items removed successfully');
+                        location.reload(); // Reload cart items
+                    },
+                    error: function () {
+                        alert('Failed to remove selected items');
+                    }
+                });
+            } else {
+                alert('Please select items to remove.');
+            }
+        });
+
+        // Handle buy selected items - Show modal first
+        document.getElementById('buy-selected').addEventListener('click', function () {
+            const selectedItems = getSelectedItems();
+            if (selectedItems.length > 0) {
+                $.ajax({
+                    url: '/cart/items',
+                    method: 'GET',
+                    success: function (response) {
+                        let total = 0;
+                        let orderDetailsHTML = '';
+                        const itemsToBuy = response.filter(item => selectedItems.includes(item.id.toString()));
+
+                        if (itemsToBuy.length === 0) {
+                            alert('No items selected.');
+                            return;
+                        }
+
+                        itemsToBuy.forEach(item => {
+                            const subtotal = item.price * item.quantity;
+                            total += subtotal;
+                            orderDetailsHTML += `
+                            <p>${item.name} - Quantity: ${item.quantity} - Subtotal: ₱${subtotal.toFixed(2)}</p>
+                        `;
+                        });
+
+                        // Populate modal
+                        document.getElementById('order-details').innerHTML = orderDetailsHTML;
+                        document.getElementById('total-price').textContent = total.toFixed(2);
+
+                        // Show modal
+                        const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+                        orderModal.show();
+
+                        // Handle order confirmation
+                        document.getElementById('confirmOrder').onclick = function () {
+                            confirmOrder(itemsToBuy.map(item => ({
+                                product_id: item.product_id,
+                                quantity: item.quantity
+                            })), orderModal);
+                        };
+                    },
+                    error: function () {
+                        alert('Failed to fetch cart items.');
+                    }
+                });
+            } else {
+                alert('Please select items to buy.');
+            }
+        });
+    });
+
+    // Toggle visibility of buttons when items are selected/deselected
+    function toggleSelection() {
+        const selectedItems = getSelectedItems();
+        const removeButton = document.getElementById('remove-selected');
+        const buyButton = document.getElementById('buy-selected');
+
+        if (selectedItems.length > 0) {
+            removeButton.style.display = 'block';
+            buyButton.style.display = 'block';
+        } else {
+            removeButton.style.display = 'none';
+            buyButton.style.display = 'none';
+        }
+    }
+
+    // Get selected items' IDs
+    function getSelectedItems() {
+        const selectedItems = [];
+        document.querySelectorAll('.select-item:checked').forEach(item => {
+            selectedItems.push(item.getAttribute('data-id'));
+        });
+        return selectedItems;
+    }
+
+    function updateQuantity(id, action) {
+        const quantityElement = document.getElementById('quantity-' + id);
+        let quantity = parseInt(quantityElement.value);
+
+        if (action === 'increase') {
+            quantity += 1;
+        } else if (action === 'decrease') {
+            quantity -= 1;
+        }
+
+        if (quantity < 1) {
+            quantity = 1;
+        }
+
+        quantityElement.value = quantity;
+
+        $.ajax({
+            url: `/cart/update/${id}`,
+            method: 'POST',
+            data: {
+                quantity: quantity
+            },
+            success: function (response) {
+                alert('Cart updated successfully!');
+                location.reload();
+            },
+            error: function (xhr) {
+                alert('Failed to update the quantity');
+            }
+        });
+    }
+
+    function updateQuantityManually(id) {
+        const quantityElement = document.getElementById('quantity-' + id);
+        let quantity = parseInt(quantityElement.value);
+
+        if (quantity < 1) {
+            quantity = 1;
+        }
+
+        quantityElement.value = quantity;
+
+        $.ajax({
+            url: `/cart/update/${id}`,
+            method: 'POST',
+            data: {
+                quantity: quantity
+            },
+            success: function (response) {
+                alert('Cart updated successfully!');
+                location.reload();
+            },
+            error: function (xhr) {
+                alert('Failed to update the quantity');
+            }
+        });
+    }
+
+    function showOrderConfirmationModal(productId) {
+        const quantity = document.getElementById('quantity' + productId).value;
+        const totalElement = document.getElementById('total' + productId).textContent;
+        const productName = document.querySelector(`#productModal${productId} .modal-title`).textContent;
+
+        // Close the product modal first
+        const productModalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal' + productId));
+        productModalInstance.hide();
+
+        setTimeout(() => {
+            // Populate order details
+            const orderDetails = document.getElementById('order-details');
+            orderDetails.innerHTML = `<p>${productName} - Quantity: ${quantity}</p>`;
+
+            document.getElementById('total-price').textContent = totalElement.replace('₱', '');
+
+            // Show the order confirmation modal
+            const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+            orderModal.show();
+
+            // Confirm button action
+            document.getElementById('confirmOrder').onclick = function () {
+                confirmOrder([{ product_id: productId, quantity: quantity }], orderModal);
+            };
+        }, 300); // Wait for product modal to close
+    }
+
+
+    function confirmOrder(items, modal) {
+        $.ajax({
+            url: '/order/create',
+            method: 'POST',
+            data: {
+                items: items
+            },
+            success: function (response) {
+                modal.hide();
+                let message = 'Order placed successfully! Please go to your profile to track your order.';
+                if (response.message) {
+                    message += '\n' + response.message;
+                }
+                alert(message);
+                location.reload();
+            },
+            error: function (xhr) {
+                alert('Failed to place order: ' + (xhr.responseJSON?.message || 'Unknown error'));
+            }
+        });
+    }
+
+    // Function to load My Orders
+    function loadMyOrders() {
+        $.ajax({
+            url: '/orders/active',
+            method: 'GET',
+            success: function (response) {
+                const ordersContainer = document.getElementById('my-orders');
+                ordersContainer.innerHTML = '';
+                if (response.length > 0) {
+                    response.forEach(order => {
+                        ordersContainer.innerHTML += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6>Order #${order.id} - ${order.status}</h6>
+                                <p>Total: ₱${order.total_price}</p>
+                                <button class="btn btn-success btn-sm" onclick="markAsReceived(${order.id})">Mark as Received</button>
+                            </div>
+                        </div>
+                    `;
+                    });
+                } else {
+                    ordersContainer.innerHTML = '<p>No ongoing orders.</p>';
+                }
+            },
+            error: function () {
+                document.getElementById('my-orders').innerHTML = '<p class="text-danger">Failed to load orders.</p>';
+            }
+        });
+    }
+
+    // Function to mark order as received
+    function markAsReceived(orderId) {
+        $.ajax({
+            url: `/orders/update/${orderId}`,
+            method: 'POST',
+            data: {
+                status: 'received'
+            },
+            success: function (response) {
+                alert('Order marked as received!');
+                location.reload();
+            },
+            error: function (xhr) {
+                alert('Failed to mark as received: ' + (xhr.responseJSON?.message || 'Unknown error'));
+            }
+        });
+    }
+
+    // Function to load My History
+    function loadMyHistory() {
+        $.ajax({
+            url: '/orders/history',
+            method: 'GET',
+            success: function (response) {
+                const historyContainer = document.getElementById('my-history');
+                historyContainer.innerHTML = '';
+
+                if (response.length > 0) {
+                    response.forEach(order => {
+                        let productsHTML = '';
+
+                        order.products.forEach(product => {
+                            let reviewButton = '';
+                            if (order.status === 'received' || order.status === 'completed') {
+                                const buttonText = product.review_exists ? 'View Review' : 'Review';
+                                reviewButton = `
+                                <button class="btn btn-primary review-btn" data-order-id="${order.id}" data-product-id="${product.product_id}">
+                                    ${buttonText}
+                                </button>
+                            `;
+                            }
+
+                            productsHTML += `
+                            <div>
+                                <p>${product.name} - ₱${product.price}</p>
+                                ${reviewButton}
+                            </div>
+                        `;
+                        });
+
+                        historyContainer.innerHTML += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6>Order #${order.id} - ${order.status}</h6>
+                                <p>Total: ₱${order.total_price}</p>
+                                ${productsHTML}
+                            </div>
+                        </div>
+                    `;
+                    });
+
+                    // Attach click event to the dynamically created review buttons
+                    $('.review-btn').off('click').on('click', function () {
+                        const productId = $(this).data('product-id');
+                        const orderId = $(this).data('order-id');
+                        const buttonText = $(this).text().trim();
+
+                        if (buttonText === 'View Review') {
+                            const offcanvas = new bootstrap.Offcanvas(document.getElementById('reviewsSidebar'));
+                            offcanvas.show();
+                        } else {
+                            window.location.href = `/review/${productId}/${orderId}`;
+                        }
+                    });
+                } else {
+                    historyContainer.innerHTML = '<p>No completed or received orders.</p>';
+                }
+            },
+            error: function () {
+                document.getElementById('my-history').innerHTML = '<p class="text-danger">Failed to load history.</p>';
+            }
+        });
+    }
+
+    // Function to load My Reviews
+    function loadMyReviews() {
+        $.ajax({
+            url: '/user/reviews',
+            method: 'GET',
+            success: function (response) {
+                const reviewsContainer = document.getElementById('my-reviews');
+                reviewsContainer.innerHTML = '';
+
+                if (response.length > 0) {
+                    response.forEach(review => {
+                        reviewsContainer.innerHTML += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6>${review.product_name}</h6>
+                                <p>Rating: ${'⭐'.repeat(review.rating)}</p>
+                                <p>${review.comment}</p>
+                                <small class="text-muted">${new Date(review.created_at).toLocaleDateString()}</small>
+                            </div>
+                        </div>
+                    `;
+                    });
+                } else {
+                    reviewsContainer.innerHTML = '<p>No reviews yet.</p>';
+                }
+            },
+            error: function () {
+                document.getElementById('my-reviews').innerHTML = '<p class="text-danger">Failed to load reviews.</p>';
+            }
+        });
+    }
+
+    // Update click event listeners to simply show the sidebar (data is already loaded)
+    document.querySelector('[data-bs-target="#ordersSidebar"]').addEventListener('click', function () {
+        // Optionally, you can call loadMyOrders() again to refresh the data
+        // loadMyOrders();
+    });
+
+    document.querySelector('[data-bs-target="#historySidebar"]').addEventListener('click', function () {
+        // Optionally, you can call loadMyHistory() again to refresh the data
+        // loadMyHistory(); 
+    });
+
+    document.querySelector('[data-bs-target="#reviewsSidebar"]').addEventListener('click', function () {
+        // Optionally, you can call loadMyReviews() again to refresh the data
+        // loadMyReviews();
+    });
+</script> -->

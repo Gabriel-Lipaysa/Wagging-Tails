@@ -1,9 +1,9 @@
 from flask import render_template, session, redirect, flash, url_for, request, Blueprint, app, current_app
-from app import db, bcrypt
+from app import db
 from werkzeug.utils import secure_filename
 import os, uuid
-
-# from app.routes.user import show_user_login
+from app.utils.auth import require_role
+from app.routes.user import show_user_login
 
 admin = Blueprint('admin', __name__)
 
@@ -39,7 +39,7 @@ def admin_login():
         password = request.form.get('password')
         
         admin = db.query_one("SELECT * FROM users WHERE username=%s AND role='admin'", (username,))
-        if admin and bcrypt.check_password_hash(admin['password'], password):
+        if admin and admin['password'] == password:
             session['user_id'] = admin['id']
             session['role'] = admin['role']
             flash('Admin logged in successfully!', 'success')
@@ -59,26 +59,17 @@ def logout():
 
 @admin.route('/admin/dashboard')
 def dashboard():
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        return redirect(url_for('admin.admin_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
 
     return render_template('admin/dashboard.html')
 
 @admin.route('/admin/products', methods=['GET'])
 def show_products():
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-    
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        # return redirect(url_for('show_user_login'))
-
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
     
     dogFoods = db.query_all("SELECT * FROM products where category='Dog Food'")
     catFoods = db.query_all("SELECT * FROM products where category='Cat Food'")
@@ -89,26 +80,18 @@ def show_products():
 
 @admin.route('/admin/products/create', methods=['GET'])
 def show_create_form():
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-    
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        # return redirect(url_for('show_user_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
 
     return render_template('admin/products/create.html')
 
 
 @admin.route('/admin/products/store', methods=['POST'])
 def store_product():
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-    
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        # return redirect(url_for('show_user_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
     
     category = request.form.get('category')
     name = request.form.get('name').strip()
@@ -150,13 +133,9 @@ def store_product():
 
 @admin.route('/admin/products/edit/<int:id>', methods=['GET'])
 def show_edit_form(id):
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        return redirect(url_for('admin.admin_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
 
     product = db.query_one("SELECT * FROM products WHERE id=%s", params=(id,))
 
@@ -168,13 +147,9 @@ def show_edit_form(id):
 
 @admin.route('/admin/products/update/<int:id>', methods=['POST'])
 def update_product(id):
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-    
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        # return redirect(url_for('show_user_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
     
     product = db.query_one("SELECT * FROM products WHERE id=%s", (id,))
     if not product:
@@ -247,13 +222,9 @@ def update_product(id):
 
 @admin.route('/admin/products/delete/<int:id>', methods=['POST'])
 def delete_product(id):
-    if not session.get('user_id'):
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('admin.admin_login'))
-    
-    if session.get('role') != 'admin':
-        flash('Access denied. Admins only.', 'danger')
-        # return redirect(url_for('show_user_login'))
+    check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
+    if check:
+        return check
     
     product = db.query_one("SELECT * FROM products WHERE id=%s", params=(id,))
 

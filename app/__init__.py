@@ -4,7 +4,6 @@ from flask_mysqldb import MySQL
 import os
 
 mysql = MySQL()  
-bcrypt = Bcrypt()
 
 class DBHelper:
     @staticmethod
@@ -48,7 +47,6 @@ def init_app():
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 
     mysql.init_app(app)
-    bcrypt.init_app(app)
 
     from app.routes.admin import admin
     from app.routes.user import user
