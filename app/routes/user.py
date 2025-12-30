@@ -94,7 +94,7 @@ def user_dashboard():
         CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
         FROM products p 
         LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
-        WHERE p.category = %s
+        WHERE p.category = %s LIMIT 3
     """
 
     # Fetch products with the wishlist status included
