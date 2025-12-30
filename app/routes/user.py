@@ -100,15 +100,30 @@ def cart_items():
     rows = db.query_all("SELECT c.id, c.product_id, p.name, p.price, c.quantity, p.image FROM carts c JOIN products p ON c.product_id = p.id WHERE c.user_id=%s", (uid,))
     return jsonify(rows)
 
-@user.route('/cart/items/update/<int:id>', methods=['POST'])
-def cart_items_update(id):
+@user.route('/cart/items/upsert', methods=['POST'])
+def cart_items_upsert():
     uid = session.get('user_id')
     if not uid:
-        return jsonify({'error': 'Unauthorized'}), 401
-    new_quantity = request.form.get('quantity')
-    db.execute("UPDATE carts SET quantity = %s WHERE id = %s AND user_id = %s", 
-               (new_quantity, id, uid))
-    return jsonify({'status': 'success', 'new_quantity': new_quantity})
+        return jsonify({'error': 'Please login first'}), 401
+    
+    pid = request.form.get('product_id')
+    qty = int(request.form.get('quantity', 1))
+    mode = request.form.get('mode') # 'add' or 'set'
+
+    # Check if this item is already in the user's cart
+    existing = db.query_one("SELECT id, quantity FROM carts WHERE user_id=%s AND product_id=%s", (uid, pid))
+
+    if existing:
+        if mode == 'add':
+            new_qty = existing['quantity'] + qty
+        else: # mode is 'set'
+            new_qty = qty
+        db.execute("UPDATE carts SET quantity = %s WHERE id = %s", (new_qty, existing['id']))
+    else:
+        # If item doesn't exist, we ignore 'mode' and just create it
+        db.execute("INSERT INTO carts (user_id, product_id, quantity) VALUES (%s, %s, %s)", (uid, pid, qty))
+    
+    return jsonify({'status': 'success'})
 
 @user.route('/cart/items/remove-selected', methods=['POST'])
 def cart_items_remove_selected():

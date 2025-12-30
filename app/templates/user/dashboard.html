@@ -80,7 +80,7 @@
                             ₱{{ "{:,.2f}".format(product.price) }}
                         </p>
 
-                        <button class="btn w-100 py-2 fw-bold" style="background-color: #CB997E; color: white; border-radius: 8px;" >
+                        <button class="btn w-100 py-2 fw-bold" style="background-color: #CB997E; color: white; border-radius: 8px;" onclick="upSert({{ product.id }}, 1, 'add')">
                             <i class="bi bi-cart-plus me-2"></i>Add to Cart
                         </button>
                     </div>

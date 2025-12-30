@@ -259,20 +259,39 @@
         window.removeCartItems([id]); // Wraps the single ID in an array
     };
 
-    window.updateQuantity = function(id, action) {
-        const quantityInput = document.getElementById('quantity-' + id);
+    // The Single Source of Truth for Cart Changes
+    window.upSert = function(productId, qty, mode) {
+        let formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', qty);
+        formData.append('mode', mode); // 'add' (increment) or 'set' (overwrite)
+
+        fetch('/cart/items/upsert', { 
+            method: 'POST', 
+            body: formData 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                loadCartItems(); // Refresh the UI
+            } else {
+                alert(data.error || "Action failed");
+            }
+        })
+        .catch(err => console.error("Cart Error:", err));
+    }
+
+    // Logic for Sidebar +/- Buttons
+    window.updateQuantity = function(cartId, productId, action) {
+        const quantityInput = document.getElementById('quantity-' + cartId);
         if (!quantityInput) return;
+
         let currentQuantity = parseInt(quantityInput.value);
         let newQuantity = (action === 'increase') ? currentQuantity + 1 : currentQuantity - 1;
 
-        if (newQuantity >= 1 && newQuantity !== currentQuantity) {
-            $.ajax({
-                url: `/cart/items/update/${id}`,
-                method: 'POST',
-                data: { quantity: newQuantity },
-                success: function () { loadCartItems(); },
-                error: function () { alert('Update failed.'); }
-            });
+        if (newQuantity >= 1) {
+            // We use 'set' mode here to overwrite the DB with the new exact number
+            window.upSert(productId, newQuantity, 'set');
         }
     };
 
@@ -325,9 +344,9 @@
                                             <p class="fw-normal small mb-2">₱${item.price}</p>
                                             <div class="d-flex flex-row align-items-center">
                                                 <div class="input-group input-group-sm border rounded" style="max-width: 100px; border-color: #6a705d !important;">
-                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, 'decrease')">-</button>
+                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, ${item.product_id}, 'decrease')">-</button>
                                                     <input type="text" id="quantity-${item.id}" class="form-control text-center border-0 bg-transparent" value="${item.quantity}" readonly>
-                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, 'increase')">+</button>
+                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, ${item.product_id}, 'increase')">+</button>
                                                 </div>
                                                 <button class="btn btn-link p-0 ms-2" onclick="removeSingleItem(${item.id})">
                                                     <i class="bi bi-trash fs-5 text-danger"></i>
