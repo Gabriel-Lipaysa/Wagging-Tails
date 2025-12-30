@@ -206,31 +206,31 @@
 
     // This function handles BOTH single trash icon clicks AND the bulk remove button
     window.toggleWishlist = function(productId, btnElement) {
-    // We use the native 'fetch' API so we don't depend on $
-    fetch(`/wishlist/toggle/${productId}`, {
-        method: 'POST'
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Not logged in');
-        return response.json();
-    })
-    .then(data => {
-        const icon = btnElement.querySelector('i');
-        if (data.status === 'added') {
-            // Change heart to filled
-            icon.classList.remove('bi-heart');
-            icon.classList.add('bi-heart-fill');
-        } else {
-            // Change heart to outline
-            icon.classList.remove('bi-heart-fill');
-            icon.classList.add('bi-heart');
-        }
-    })
-    .catch(err => {
-        alert("Please login to add to wishlist!");
-        window.location.href = "/login";
-    });
-};
+        // We use the native 'fetch' API so we don't depend on $
+        fetch(`/wishlist/toggle/${productId}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Not logged in');
+            return response.json();
+        })
+        .then(data => {
+            const icon = btnElement.querySelector('i');
+            if (data.status === 'added') {
+                // Change heart to filled
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill');
+            } else {
+                // Change heart to outline
+                icon.classList.remove('bi-heart-fill');
+                icon.classList.add('bi-heart');
+            }
+        })
+        .catch(err => {
+            alert("Please login to add to wishlist!");
+            window.location.href = "/login";
+        });
+    };
 
     window.removeCartItems = function(idList) {
         if (!idList || idList.length === 0) {

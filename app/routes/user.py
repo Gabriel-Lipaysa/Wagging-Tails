@@ -85,12 +85,27 @@ def user_dashboard():
     if check:
         return check
         
-    all_products = db.query_all("SELECT * FROM products")
-    dog_products = db.query_all("SELECT * FROM products WHERE category='Dog Food'")
-    cat_products = db.query_all("SELECT * FROM products WHERE category='Cat Food'")
+    uid = session.get('user_id')
 
-    # Pass them as variables to the template
-    return render_template('user/dashboard.html', all_p=all_products, dog_p=dog_products, cat_p=cat_products)
+    # This specialized query checks if each product is in the user's wishlist
+    # We use a LEFT JOIN on the wishlists table filtered by the current user's ID
+    query = """
+        SELECT p.*, 
+        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+        FROM products p 
+        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+        WHERE p.category = %s
+    """
+
+    # Fetch products with the wishlist status included
+    dog_products = db.query_all(query, (uid, 'Dog Food'))
+    cat_products = db.query_all(query, (uid, 'Cat Food'))
+    all_products = db.query_all("SELECT * FROM products") # Add join here too if needed
+
+    return render_template('user/dashboard.html', 
+                           all_p=all_products, 
+                           dog_p=dog_products, 
+                           cat_p=cat_products)
 
 @user.route('/cart/items', methods=['GET'])
 def cart_items():
