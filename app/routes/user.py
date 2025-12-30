@@ -73,19 +73,24 @@ def show_user_signup():
 
     return render_template('auth/user-signup.html')
 
-@user.route('/user/logout')
+@user.route('/user/logout', methods=['GET'])
 def user_logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('user.show_user_login'))
 
-@user.route('/user/dashboard')
+@user.route('/user/dashboard', methods=['GET'])
 def user_dashboard():
     check = require_role('user', 'user.show_user_login', 'user.show_user_login')
     if check:
         return check
+        
+    all_products = db.query_all("SELECT * FROM products")
+    dog_products = db.query_all("SELECT * FROM products WHERE category='Dog Food'")
+    cat_products = db.query_all("SELECT * FROM products WHERE category='Cat Food'")
 
-    return render_template('user/dashboard.html')
+    # Pass them as variables to the template
+    return render_template('user/dashboard.html', all_p=all_products, dog_p=dog_products, cat_p=cat_products)
 
 @user.route('/cart/items', methods=['GET'])
 def cart_items():
@@ -123,3 +128,22 @@ def cart_items_remove_selected():
         db.execute("DELETE FROM carts WHERE id = %s AND user_id = %s", (cart_id, uid))
     
     return jsonify({'status': 'success'})
+
+@user.route('/wishlist/toggle/<int:product_id>', methods=['POST'])
+def toggle_wishlist(product_id): # The ID comes from the URL, not the form
+    uid = session.get('user_id')
+    if not uid:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    # 1. Check if this product is already in the user's wishlist
+    # (Note: Use your 'wishlists' table, not 'carts')
+    existing = db.query_one("SELECT id FROM wishlists WHERE user_id=%s AND product_id=%s", (uid, product_id))
+    
+    if existing:
+        # 2. If it exists, remove it (Unlike)
+        db.execute("DELETE FROM wishlists WHERE id = %s", (existing['id'],))
+        return jsonify({'status': 'removed'})
+    else:
+        # 3. If it doesn't exist, add it (Like)
+        db.execute("INSERT INTO wishlists (user_id, product_id) VALUES (%s, %s)", (uid, product_id))
+        return jsonify({'status': 'added'})
