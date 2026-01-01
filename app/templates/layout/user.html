@@ -65,7 +65,7 @@
                 
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/login">
+                    <a class="nav-link" href="/">
                         <i class="bi bi-box-arrow-in-right"></i> Login
                     </a>
                 </li>
@@ -228,7 +228,7 @@
         })
         .catch(err => {
             alert("Please login to add to wishlist!");
-            window.location.href = "/login";
+            window.location.href = "/";
         });
     };
 
