@@ -33,7 +33,7 @@
                 {% if session.get('user_id') and session.get('role') == 'user' %}
                 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#wishlistSidebar">
                         <i class="bi bi-heart fs-5 text-danger"></i>
                     </a>
                 </li>
@@ -75,7 +75,29 @@
         </div>
     </nav>
 
-    
+    <!-- Wishlist Sidebar (Offcanvas) -->
+    <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="wishlistSidebar" aria-labelledby="wishlistSidebarLabel" style="width: 400px; color: #6a705d !important">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="logo-text mb-0" style="color: #6a705d;" id="wishlistSidebarLabel">My Wishlist</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+
+        <div class="px-4 py-2 bg-light border-bottom d-flex justify-content-between small fw-bold text-muted">
+            <span style="color: #6a705d;">SAVED PRODUCTS</span>
+        </div>
+
+        <div class="offcanvas-body flex-grow-1" id="wishlist-items" style="overflow-y: auto;">
+            </div>
+
+        <div class="offcanvas-footer border-top p-3 bg-white">
+            <div class="d-grid gap-2">
+                <button class="btn py-2 fw-bold" style="background-color: #6a705d; color: white;" data-bs-dismiss="offcanvas">
+                    CONTINUE SHOPPING
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Cart Sidebar (Offcanvas) -->
     <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="cartSidebar" aria-labelledby="cartSidebarLabel" style="width: 400px; color: #6a705d !important">
         <div class="offcanvas-header border-bottom">
@@ -203,10 +225,47 @@
 <script>
 
     // --- 1. GLOBAL FUNCTIONS ---
+    window.loadWishlistItems = function() {
+        fetch("/wishlist/items") // You will create this route next
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('wishlist-items');
+            container.innerHTML = ''; 
+
+            if (data.length > 0) {
+                data.forEach(item => {
+                    container.innerHTML += `
+                        <div class="card mb-3 shadow-sm border rounded bg-light p-2" style="border-color: #6a705d !important;">
+                            <div class="card-body d-flex justify-content-between p-1">
+                                <img src="/static/${item.image}" class="rounded" style="object-fit:cover; width:80px; height:80px;">
+                                <div class="d-flex flex-column flex-grow-1 px-3">
+                                    <p class="fw-semibold mb-0" style="color: #6a705d;">${item.name}</p>
+                                    <p class="fw-bold mb-2" style="color: #CB997E;">₱${item.price.toLocaleString()}</p>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm text-white" style="background-color: #CB997E;" onclick="addToCartFromWishlist(${item.product_id})">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleWishlist(${item.product_id}, null)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-heart fs-1"></i><p>Your wishlist is empty</p></div>`;
+            }
+        });
+    };
+
+    // Helper to move item to cart and refresh both sidebars
+    window.addToCartFromWishlist = function(productId) {
+        upSert(productId, 1, 'add'); 
+    };
 
     // This function handles BOTH single trash icon clicks AND the bulk remove button
     window.toggleWishlist = function(productId, btnElement) {
-        // We use the native 'fetch' API so we don't depend on $
         fetch(`/wishlist/toggle/${productId}`, {
             method: 'POST'
         })
@@ -215,20 +274,26 @@
             return response.json();
         })
         .then(data => {
-            const icon = btnElement.querySelector('i');
-            if (data.status === 'added') {
-                // Change heart to filled
-                icon.classList.remove('bi-heart');
-                icon.classList.add('bi-heart-fill');
-            } else {
-                // Change heart to outline
-                icon.classList.remove('bi-heart-fill');
-                icon.classList.add('bi-heart');
+            // 1. Update the Icon on the Product Card (if btnElement exists)
+            if (btnElement) {
+                const icon = btnElement.querySelector('i');
+                if (data.status === 'added') {
+                    icon.classList.replace('bi-heart', 'bi-heart-fill');
+                } else {
+                    icon.classList.replace('bi-heart-fill', 'bi-heart');
+                }
+            }
+
+            // 2. Check if the Wishlist Sidebar is currently open
+            const wishlistSidebar = document.getElementById('wishlistSidebar');
+            if (wishlistSidebar && wishlistSidebar.classList.contains('show')) {
+                // Re-fetch the list so the item disappears from the sidebar immediately
+                loadWishlistItems();
             }
         })
         .catch(err => {
-            alert("Please login to add to wishlist!");
-            window.location.href = "/";
+            alert("Please login to manage your wishlist!");
+            window.location.href = "/login";
         });
     };
 
@@ -374,6 +439,11 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         loadCartItems();
+
+        // Initialize wishlist loader when sidebar opens
+        document.getElementById('wishlistSidebar').addEventListener('show.bs.offcanvas', function () {
+            loadWishlistItems();
+        });
 
         // BULK REMOVE BUTTON
         document.getElementById('remove-selected')?.addEventListener('click', function () {
