@@ -87,8 +87,6 @@ def home():
         
     uid = session.get('user_id')
 
-    # This specialized query checks if each product is in the user's wishlist
-    # We use a LEFT JOIN on the wishlists table filtered by the current user's ID
     query = """
         SELECT p.*, 
         CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
@@ -97,10 +95,9 @@ def home():
         WHERE p.category = %s LIMIT 3
     """
 
-    # Fetch products with the wishlist status included
     dog_products = db.query_all(query, (uid, 'Dog Food'))
     cat_products = db.query_all(query, (uid, 'Cat Food'))
-    all_products = db.query_all("SELECT * FROM products") # Add join here too if needed
+    all_products = db.query_all("SELECT * FROM products") 
 
     return render_template('user/home.html', 
                            all_p=all_products, 
@@ -192,6 +189,22 @@ def cart_items_remove_selected():
         db.execute("DELETE FROM carts WHERE id = %s AND user_id = %s", (cart_id, uid))
     
     return jsonify({'status': 'success'})
+
+@user.route('/wishlist/items', methods=['GET'])
+def get_wishlist_items():
+    uid = session.get('user_id')
+    if not uid:
+        return jsonify([])
+
+    # Join products with wishlists to get product details
+    items = db.query_all("""
+        SELECT p.id as product_id, p.name, p.price, p.image 
+        FROM products p
+        JOIN wishlists w ON p.id = w.product_id
+        WHERE w.user_id = %s
+    """, (uid,))
+    
+    return jsonify(items)
 
 @user.route('/wishlist/toggle/<int:product_id>', methods=['POST'])
 def toggle_wishlist(product_id): # The ID comes from the URL, not the form
