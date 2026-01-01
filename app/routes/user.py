@@ -8,7 +8,7 @@ user = Blueprint('user',__name__)
 def show_user_login():
 
     if session.get('role') == 'user':
-        return redirect(url_for('user.user_dashboard'))
+        return redirect(url_for('user.home'))
 
     # Validate login form
     if request.method == "POST":
@@ -21,7 +21,7 @@ def show_user_login():
             session['user_id'] = user['id']
             session['role'] = 'user'
             flash('User logged in successfully!', 'success')
-            return redirect(url_for('user.user_dashboard'))
+            return redirect(url_for('user.hone'))
         else:
             flash('Invalid email or password.', 'danger')
 
@@ -33,7 +33,7 @@ def show_user_login():
 def show_user_signup():
 
     if session.get('role') == 'user':
-        return redirect(url_for('user.user_dashboard'))
+        return redirect(url_for('user.home'))
 
     if request.method == 'POST':
         name = request.form.get('name').strip()
@@ -69,18 +69,18 @@ def show_user_signup():
         session['role'] = 'user'
 
         flash('Registration successful! Welcome to Wagging Wonders.', 'success')
-        return redirect(url_for('user.user_dashboard'))
+        return redirect(url_for('user.home'))
 
     return render_template('auth/user-signup.html')
 
 @user.route('/user/logout', methods=['GET'])
-def user_logout():
+def user_logout(): 
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('user.show_user_login'))
 
-@user.route('/user/dashboard', methods=['GET'])
-def user_dashboard():
+@user.route('/home', methods=['GET'])
+def home():
     check = require_role('user', 'user.show_user_login', 'user.show_user_login')
     if check:
         return check
@@ -102,10 +102,44 @@ def user_dashboard():
     cat_products = db.query_all(query, (uid, 'Cat Food'))
     all_products = db.query_all("SELECT * FROM products") # Add join here too if needed
 
-    return render_template('user/dashboard.html', 
+    return render_template('user/home.html', 
                            all_p=all_products, 
                            dog_p=dog_products, 
                            cat_p=cat_products)
+
+@user.route('/products/<category>', methods=['GET'])
+@user.route('/products', defaults={'category': 'all'}, methods=['GET'])
+def product_listing(category):
+    uid = session.get('user_id', 0)
+    page = request.args.get('page', 1, type=int)
+    per_page = 12 # Show more on the full page
+    offset = (page - 1) * per_page
+
+    # Base Query
+    query = """
+        SELECT p.*, 
+        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+        FROM products p 
+        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+    """
+    
+    # Filter logic
+    params = [uid]
+    if category != 'all':
+        query += " WHERE p.category = %s"
+        params.append(category)
+    else:
+        category = "All Products"
+    query += " LIMIT %s OFFSET %s"
+    params.extend([per_page, offset])
+
+    products = db.query_all(query, tuple(params))
+    
+    return render_template('user/products/products.html', 
+                           products=products, 
+                           current_category=category)
+
+
 
 @user.route('/cart/items', methods=['GET'])
 def cart_items():
