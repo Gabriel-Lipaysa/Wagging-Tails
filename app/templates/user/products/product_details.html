@@ -1,0 +1,76 @@
+{% extends 'layout/user.html' %}
+{% from 'macros/card_macros.html' import product_card %}
+{% block content %}
+
+<div class="container mt-5 pt-5">
+    <div class="row g-5 position-relative">
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 20px;">
+                <img src="{{ url_for('static', filename=product.image) }}" class="img-fluid" alt="{{ product.name }}" style="max-height: 500px; object-fit: contain;">
+            </div>
+            
+            <div class="mb-5">
+                <h5 class="fw-bold">Description</h5>
+                <p class="text-muted">{{ product.description }}</p>
+            </div>
+
+            <div id="reviews-section" class="mb-5">
+                <h5 class="fw-bold">Reviews</h5>
+                <div class="review-placeholder py-5 border-bottom">
+                    <p class="text-muted italic">"Great quality product!" - ⭐⭐⭐⭐⭐</p>
+                </div>
+            </div>
+
+            
+        </div>
+
+        <div class="col-md-5 ">
+            <div id="floating-info" class="sticky-top" style="top: 40px; transition: opacity 0.4s ease, transform 0.4s ease; z-index: 1;">
+                <h5 style="font-size: small;">Brand Name</h5>
+                <div class="d-flex justify-content-between align-items-start">
+                    <h1 class="display-6 fw-bold" style="color: #5A604D;">{{ product.name }}</h1>
+                    <button class="btn btn-outline-danger border-0 shadow-none" onclick="toggleWishlist({{ product.id }}, this)">
+                        <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-3"></i>
+                    </button>
+                </div>
+                
+                <h2 class="mb-4" style="color: #CB997E !important;">₱{{ "{:,.2f}".format(product.price) }}</h2>
+                
+                <hr>
+                
+                <div class="my-4">
+                    <span class="badge {{ 'bg-success' if product.quantity > 0 else 'bg-danger' }} p-2">
+                        {{ 'In Stock (' + product.quantity|string + ')' if product.quantity > 0 else 'Out of Stock' }}
+                    </span>
+                </div>
+
+                <div class="d-flex align-items-center mb-4">
+                    <span class="me-3 fw-bold" style="color: #6a705d;">Quantity:</span>
+                    <div class="input-group border rounded" style="max-width: 140px; border-color: #6a705d !important;">
+                        <button class="btn btn-outline-secondary border-0" type="button" onclick="adjustPDPQuantity(-1)">-</button>
+                        <input type="text" id="pdp-quantity" class="form-control text-center border-0 bg-transparent fw-bold" value="1" readonly>
+                        <button class="btn btn-outline-secondary border-0" type="button" onclick="adjustPDPQuantity(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button id="pdp-add-to-cart" class="btn btn-lg py-3 fw-bold" 
+                            style="background-color: #6B705C; color: white; border-radius: 5px;"
+                            onclick="addToCartFromPDP({{ product.id }})">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="related-products" class="mt-5 pt-5 border-top pb-5">
+        <h3 class="fw-bold mb-4" style="color: #5A604D;">Related Products</h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4"> 
+            {% for p in related_products %}
+                {{ product_card(p) }}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

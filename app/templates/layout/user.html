@@ -225,6 +225,7 @@
 <script>
 
     // --- 1. GLOBAL FUNCTIONS ---
+    
     window.loadWishlistItems = function() {
         fetch("/wishlist/items") // You will create this route next
         .then(response => response.json())
@@ -259,6 +260,29 @@
         });
     };
 
+    // Function to update the number shown in the PDP input field
+    window.adjustPDPQuantity = function(change) {
+        const qtyInput = document.getElementById('pdp-quantity');
+        let currentQty = parseInt(qtyInput.value);
+        let newQty = currentQty + change;
+
+        // Prevent quantity from going below 1
+        if (newQty >= 1) {
+            qtyInput.value = newQty;
+        }
+    };
+
+    // Function to call the UPSERT logic with the chosen quantity
+    window.addToCartFromPDP = function(productId) {
+        const qty = parseInt(document.getElementById('pdp-quantity').value);
+        
+        // Use your existing upSert function
+        // mode 'add' ensures it adds to the current cart quantity
+        window.upSert(productId, qty, 'add');
+        
+        // Optional: Reset quantity to 1 after adding
+        document.getElementById('pdp-quantity').value = 1;
+    };
     // Helper to move item to cart and refresh both sidebars
     window.addToCartFromWishlist = function(productId) {
         upSert(productId, 1, 'add'); 
@@ -458,6 +482,34 @@
                 const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
                 orderModal.show();
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingInfo = document.getElementById('floating-info');
+            const relatedProducts = document.getElementById('related-products');
+
+            const observerOptions = {
+                root: null,
+                threshold: 0.01 // Trigger when 10% of Related Products is visible
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Fade out and move slightly
+                        floatingInfo.style.opacity = '0';
+                        floatingInfo.style.transform = 'translateY(-20px)';
+                        floatingInfo.style.pointerEvents = 'none';
+                    } else {
+                        // Fade back in
+                        floatingInfo.style.opacity = '1';
+                        floatingInfo.style.transform = 'translateY(0)';
+                        floatingInfo.style.pointerEvents = 'all';
+                    }
+                });
+            }, observerOptions);
+
+            observer.observe(relatedProducts);
         });
     });
 </script>
