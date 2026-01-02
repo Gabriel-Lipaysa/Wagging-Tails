@@ -21,7 +21,7 @@ def show_user_login():
             session['user_id'] = user['id']
             session['role'] = 'user'
             flash('User logged in successfully!', 'success')
-            return redirect(url_for('user.hone'))
+            return redirect(url_for('user.home'))
         else:
             flash('Invalid email or password.', 'danger')
 
@@ -224,3 +224,60 @@ def toggle_wishlist(product_id): # The ID comes from the URL, not the form
         # 3. If it doesn't exist, add it (Like)
         db.execute("INSERT INTO wishlists (user_id, product_id) VALUES (%s, %s)", (uid, product_id))
         return jsonify({'status': 'added'})
+    
+def get_products_by_category(uid, category, limit=12, exclude_id=None):
+    params = [uid]
+    where_clause = ""
+    
+    if category and category != 'all' and category != 'All Products':
+        where_clause = " WHERE p.category = %s"
+        params.append(category)
+        
+    if exclude_id:
+        # If there is already a WHERE clause, use AND; otherwise use WHERE
+        where_clause += (" AND " if "WHERE" in where_clause else " WHERE ") + "p.id != %s"
+        params.append(exclude_id)
+
+    query = f"""
+        SELECT p.*, 
+        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+        FROM products p 
+        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+        {where_clause}
+        ORDER BY RAND() LIMIT %s
+    """
+    params.append(limit)
+    return db.query_all(query, tuple(params))
+
+@user.route('/product/<int:product_id>', methods=['GET'])
+def product_details(product_id):
+    uid = session.get('user_id', 0)
+
+    # Main Product
+    query_main = """
+        SELECT p.*, 
+        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+        FROM products p 
+        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+        WHERE p.id = %s
+    """
+    product = db.query_one(query_main, (uid, product_id))
+
+    if not product:
+        return "Product not found", 404
+
+    # Related Products
+    query_related = """
+        SELECT p.*, 
+        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+        FROM products p 
+        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+        WHERE p.category = %s AND p.id != %s
+        LIMIT 8
+    """
+    
+    related_products = db.query_all(query_related, (uid, product['category'], product_id))
+        
+    return render_template('user/products/product_details.html', 
+                           product=product, 
+                           related_products=related_products)
