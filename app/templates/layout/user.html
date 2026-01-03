@@ -462,46 +462,46 @@
     // --- 3. DOM READY ---
 
     document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. CART & WISHLIST INITIALIZATION ---
         loadCartItems();
 
-        // Initialize wishlist loader when sidebar opens
-        document.getElementById('wishlistSidebar').addEventListener('show.bs.offcanvas', function () {
+        const wishlistSidebar = document.getElementById('wishlistSidebar');
+        wishlistSidebar?.addEventListener('show.bs.offcanvas', function () {
             loadWishlistItems();
         });
 
-        // BULK REMOVE BUTTON
+        
+
+        // --- 3. BUTTONS (Cart Page) ---
         document.getElementById('remove-selected')?.addEventListener('click', function () {
-            const selectedItems = getSelectedItems(); // This returns an array of IDs
+            const selectedItems = getSelectedItems(); 
             window.removeCartItems(selectedItems);
         });
-
-        // CHECKOUT BUTTON
+        
         document.getElementById('buy-selected')?.addEventListener('click', function () {
-            const selectedItems = getSelectedItems();
+            const selectedItems = getSelectedItems(); 
             if (selectedItems.length > 0) {
-                const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
-                orderModal.show();
+                const itemsParam = selectedItems.join(',');
+                window.location.href = `/checkouts?items=${itemsParam}`;
+            } else {
+                alert("Please select at least one item to checkout.");
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const floatingInfo = document.getElementById('floating-info');
-            const relatedProducts = document.getElementById('related-products');
+        // --- 4. SCROLL TRANSITIONS (Product Detail Page) ---
+        const floatingInfo = document.getElementById('floating-info');
+        const relatedProducts = document.getElementById('related-products');
 
-            const observerOptions = {
-                root: null,
-                threshold: 0.01 // Trigger when 10% of Related Products is visible
-            };
+        if (floatingInfo && relatedProducts) {
+            const observerOptions = { threshold: 0.01 };
 
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        // Fade out and move slightly
                         floatingInfo.style.opacity = '0';
                         floatingInfo.style.transform = 'translateY(-20px)';
                         floatingInfo.style.pointerEvents = 'none';
                     } else {
-                        // Fade back in
                         floatingInfo.style.opacity = '1';
                         floatingInfo.style.transform = 'translateY(0)';
                         floatingInfo.style.pointerEvents = 'all';
@@ -510,6 +510,6 @@
             }, observerOptions);
 
             observer.observe(relatedProducts);
-        });
+        }
     });
 </script>

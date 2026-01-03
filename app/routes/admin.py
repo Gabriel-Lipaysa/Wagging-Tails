@@ -3,6 +3,7 @@ from app import db
 from werkzeug.utils import secure_filename
 import os, uuid
 from app.utils.auth import require_role
+from app.utils.save_upload import save_upload
 from app.routes.user import show_user_login
 
 admin = Blueprint('admin', __name__)
@@ -12,20 +13,6 @@ def validate(str, msg, path):
         flash(msg,'warning')
         return 
 
-def allowed(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
-
-def save_upload(file_storage):
-    if file_storage and allowed(file_storage.filename):
-        filename = secure_filename(file_storage.filename)
-        ext = filename.rsplit('.', 1)[1].lower()
-        new_name = f"{uuid.uuid4().hex}.{ext}"
-        upload_folder = current_app.config['UPLOAD_FOLDER']
-        os.makedirs(upload_folder,exist_ok=True)
-        save_path = os.path.join(upload_folder, new_name)
-        file_storage.save(save_path)
-        return os.path.join('uploads', new_name).replace('\\','/')
-    return None
 
 
 @admin.route('/login/admin', methods=['GET', 'POST'])
