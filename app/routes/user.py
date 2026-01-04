@@ -157,22 +157,44 @@ def cart_items_upsert():
     
     pid = request.form.get('product_id')
     qty = int(request.form.get('quantity', 1))
-    mode = request.form.get('mode') # 'add' or 'set'
+    mode = request.form.get('mode', 'add')
 
-    # Check if this item is already in the user's cart
-    existing = db.query_one("SELECT id, quantity FROM carts WHERE user_id=%s AND product_id=%s", (uid, pid))
+    if not pid:
+        return jsonify({'error': 'Invalid product'}), 400
 
-    if existing:
-        if mode == 'add':
-            new_qty = existing['quantity'] + qty
-        else: # mode is 'set'
-            new_qty = qty
-        db.execute("UPDATE carts SET quantity = %s WHERE id = %s", (new_qty, existing['id']))
+    product = db.query_one("SELECT quantity FROM products WHERE id = %s", (pid,))
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+
+    available_stock = product['quantity']
+    existing = db.query_one("SELECT quantity FROM carts WHERE user_id=%s AND product_id=%s", (uid, pid))
+    current_in_cart = existing['quantity'] if existing else 0
+
+    if mode == 'add':
+        new_qty = current_in_cart + qty
     else:
-        # If item doesn't exist, we ignore 'mode' and just create it
-        db.execute("INSERT INTO carts (user_id, product_id, quantity) VALUES (%s, %s, %s)", (uid, pid, qty))
+        new_qty = qty
+
+    # Clamp to available stock — silently cap it
+    if new_qty > available_stock:
+        new_qty = available_stock  # Don't go beyond stock
+
+    was_capped = new_qty < (current_in_cart + qty if mode == 'add' else qty)
+
+    # Update cart (upsert)
+    if existing:
+        db.execute("UPDATE carts SET quantity = %s WHERE user_id = %s AND product_id = %s", 
+                   (new_qty, uid, pid))
+    else:
+        db.execute("INSERT INTO carts (user_id, product_id, quantity) VALUES (%s, %s, %s)", 
+                   (uid, pid, new_qty))
     
-    return jsonify({'status': 'success'})
+    return jsonify({
+        'status': 'success',
+        'new_quantity': new_qty,
+        'available_stock': available_stock,
+        'max_reached': was_capped  # Tell frontend if we hit the limit
+    })
 
 @user.route('/cart/items/remove-selected', methods=['POST'])
 def cart_items_remove_selected():
@@ -210,23 +232,23 @@ def get_wishlist_items():
     return jsonify(items)
 
 @user.route('/wishlist/toggle/<int:product_id>', methods=['POST'])
-def toggle_wishlist(product_id): # The ID comes from the URL, not the form
+def toggle_wishlist(product_id):
     uid = session.get('user_id')
     if not uid:
         return jsonify({'error': 'Unauthorized'}), 401
 
     # 1. Check if this product is already in the user's wishlist
-    # (Note: Use your 'wishlists' table, not 'carts')
     existing = db.query_one("SELECT id FROM wishlists WHERE user_id=%s AND product_id=%s", (uid, product_id))
     
     if existing:
         # 2. If it exists, remove it (Unlike)
         db.execute("DELETE FROM wishlists WHERE id = %s", (existing['id'],))
-        return jsonify({'status': 'removed'})
+        return jsonify({'status': 'removed', 'is_wishlisted': False})  # Return updated status
     else:
         # 3. If it doesn't exist, add it (Like)
         db.execute("INSERT INTO wishlists (user_id, product_id) VALUES (%s, %s)", (uid, product_id))
-        return jsonify({'status': 'added'})
+        return jsonify({'status': 'added', 'is_wishlisted': True})  # Return updated status
+
     
 def get_products_by_category(uid, category, limit=12, exclude_id=None):
     params = [uid]
@@ -363,17 +385,17 @@ def get_barangays():
 def process_order():
     uid = session.get('user_id')
     if not uid:
-        return redirect(url_for('user.login'))
+        return redirect(url_for('user.show_user_login'))  # Fixed: was 'user.login'
 
     # Get the specific IDs from the hidden input
     items_param = request.form.get('selected_item_ids')
     if not items_param:
-        flash("No items selected for checkout.")
+        flash("No items selected for checkout.", "danger")
         return redirect(url_for('user.home'))
     
-    item_ids = items_param.split(',')
+    item_ids = [int(id) for id in items_param.split(',') if id.isdigit()]
 
-    # Collect Form Data (Readable names from hidden inputs)
+    # Collect Form Data
     payment_method = request.form.get('payment')
     region = request.form.get('region')
     province = request.form.get('province')
@@ -382,66 +404,85 @@ def process_order():
     street = request.form.get('address') 
     postal = request.form.get('postal')
 
-    # Construct the full readable address string
     full_address = f"{street}, Brgy. {barangay}, {city}, {province}, {region} {postal}"
     
-    # 2. Handle Proof of Payment Image (Separate folder: 'payments')
+    # Handle Proof of Payment Image
     payment_image = request.files.get('image')
-    payment_rel_path = 'none' # Default if COD or no upload
+    payment_rel_path = 'none'
 
     if payment_image and payment_image.filename:
-        # Pass 'payments' as the subfolder to separate from product images
         payment_image.seek(0)
         payment_rel_path = save_upload(payment_image, subfolder='payments')
-        
         if not payment_rel_path:
             flash('Invalid payment image file format.', 'danger')
             return redirect(url_for('user.checkouts'))
 
-    # 3. Get Selected Cart Items for this Order
+    # Get Selected Cart Items with product_id and quantity
     placeholders = ', '.join(['%s'] * len(item_ids))
     query = f"""
-        SELECT c.*, p.price FROM carts c 
+        SELECT c.product_id, c.quantity, p.price, p.quantity AS stock 
+        FROM carts c 
         JOIN products p ON c.product_id = p.id 
         WHERE c.id IN ({placeholders}) AND c.user_id = %s
     """
     cart_items = db.query_all(query, tuple(item_ids + [uid]))
     
     if not cart_items:
-        flash("Selected items no longer in cart.")
+        flash("Selected items no longer in cart.", "danger")
         return redirect(url_for('user.home'))
     
     total_price = sum(item['price'] * item['quantity'] for item in cart_items)
 
-    # 4. Insert into 'orders' table
     try:
+        # 1. Insert into 'orders' table
         order_query = """
             INSERT INTO orders (user_id, total_price, payment_method, status, shipping_address, payment_screenshot) 
             VALUES (%s, %s, %s, 'Pending', %s, %s)
         """
-        # Execute returns cursor.lastrowid to link items
         order_id = db.execute(order_query, (uid, total_price, payment_method, full_address, payment_rel_path))
 
-        # 5. Insert into 'order_items' table
+        # 2. Insert into 'order_items' table
         for item in cart_items:
-            item_query = """
+            db.execute("""
                 INSERT INTO order_items (order_id, product_id, quantity, price) 
                 VALUES (%s, %s, %s, %s)
-            """
-            db.execute(item_query, (order_id, item['product_id'], item['quantity'], item['price']))
+            """, (order_id, item['product_id'], item['quantity'], item['price']))
 
-        # 6. Clear the User's Cart
-        db.execute(f"DELETE FROM carts WHERE id IN ({placeholders}) AND user_id = %s", tuple(item_ids + [uid]))
-        flash("Order placed successfully!", "success")
+        # 3. DEDUCT STOCK FROM PRODUCTS
+        for item in cart_items:
+            product_id = item['product_id']
+            ordered_qty = item['quantity']
+            current_stock = item['stock']
+
+            if ordered_qty > current_stock:
+                raise Exception(f"Not enough stock for product ID {product_id}")
+
+            db.execute("""
+                UPDATE products 
+                SET quantity = quantity - %s 
+                WHERE id = %s
+            """, (ordered_qty, product_id))
+
+        # 4. Clear the User's Selected Cart Items
+        db.execute(f"DELETE FROM carts WHERE id IN ({placeholders}) AND user_id = %s", 
+                   tuple(item_ids + [uid]))
+
+        flash("Order placed successfully! Stock has been updated.", "success")
 
     except Exception as e:
-        # Cleanup: Delete the uploaded image if the database fails
+        # Rollback cleanup
         if payment_rel_path and payment_rel_path != 'none':
-            file_disk = os.path.join(current_app.root_path, 'static', payment_rel_path)
+            file_disk = os.path.join(current_app.root_path, 'static', payment_rel_path.lstrip('/'))
             if os.path.exists(file_disk):
                 os.remove(file_disk)
-        print(f"DATABASE ERROR: {e}") 
-        flash(f'An error occurred: {e}', 'danger')
+        
+        error_msg = str(e)
+        if "Not enough stock" in error_msg:
+            flash("Sorry, one or more items no longer have enough stock.", "danger")
+        else:
+            flash("An error occurred while placing your order. Please try again.", "danger")
+        
+        print(f"ORDER ERROR: {e}")
         return redirect(url_for('user.home'))
 
     return redirect(url_for('user.home'))
