@@ -1,0 +1,129 @@
+{% extends 'layout/user.html' %}
+{% block content %}
+<div class="pt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="mb-2">
+                <h2 class="fw-bold mb-1" style="color: #5A604D;">Order History</h2>
+            </div>
+
+            <div class="d-flex flex-row justify-content-between">
+                <div class="d-flex gap-2 mb-4">
+                    {% set current_status = request.args.get('status', 'all') %}
+                    {% for status in ['all', 'Pending', 'Shipped', 'Delivered'] %}
+                    <a href="{{ url_for('user.order_history', status=status) }}" 
+                    class="btn btn-sm px-4 btn-filter {% if current_status == status %}active{% endif %}">
+                    {{ status | capitalize }}
+                    </a>
+                    {% endfor %}
+                </div>
+                <p class="text-muted">{{ orders|length }} total orders</p>
+            </div>
+            
+
+            <div class="row px-4 mb-2 d-none d-md-flex text-muted small fw-bold text-uppercase" style="letter-spacing: 1px;">
+                <div class="col-md-2">Order ID</div>
+                <div class="col-md-2">Date</div>
+                <div class="col-md-3">Preview</div>
+                <div class="col-md-3 text-center">Status</div>
+                <div class="col-md-2 text-end">Total</div>
+            </div>
+
+            {% for order in orders %}
+            <div class="card border-0 shadow-sm mb-3 order-row-card" style="border-radius: 12px;">
+                <div class="card-body p-0">
+                    <div class="row align-items-center py-3 px-4 g-0">
+                        <div class="col-6 col-md-2">
+                            <span class="d-md-none text-muted small d-block">ID:</span>
+                            <span class="fw-bold text-uppercase">#{{ order.id }}</span>
+                        </div>
+                        
+                        <div class="col-6 col-md-2">
+                            <span class="d-md-none text-muted small d-block">Date:</span>
+                            <span class="text-secondary">{{ order.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+
+                        <div class="col-12 col-md-3 mt-3 mt-md-0">
+                            {% if order.products_list %}
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename=order.products_list[0].image) }}" 
+                                     class="rounded" style="width: 70px; height: 70px; object-fit: cover; border: 1px solid #eee;">
+                                <div class="ms-2">
+                                    <span class="small fw-semibold d-block" style="max-width: 180px;">
+                                        {{ order.products_list[0].name }}
+                                    </span>
+                                    {% if order.extra_items > 0 %}
+                                    <span class="text-muted" style="font-size: 0.7rem;">+{{ order.extra_items }} more</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-6 col-md-3 mt-3 mt-md-0 text-md-center">
+                            <span class="badge rounded-pill px-3 py-2" 
+                                  style="font-size: 0.7rem; background-color: {% if order.status == 'Pending' %}#CB997E{% elif order.status == 'Shipped' %}#6a705d{% else %}#5A604D{% endif %};">
+                                {{ order.status }}
+                            </span>
+                        </div>
+
+                        <div class="col-6 col-md-2 mt-3 mt-md-0 text-end">
+                            <span class="fw-bold d-block" style="color: #CB997E;">₱{{ "{:,.2f}".format(order.total_price) }}</span>
+                            <button class="btn btn-link btn-sm p-0 text-decoration-none small fw-bold detail-toggle-btn" 
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ order.id }}"
+                                    style="color: #5A604D; font-size: 0.75rem;">
+                                VIEW DETAILS <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="collapse" id="details-{{ order.id }}">
+                        <div class=" pb-4 pt-2 border-top bg-light-subtle">
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <p class="small fw-bold text-muted mb-1">SHIPPING TO</p>
+                                    <p class="small mb-0 text-secondary" style="line-height: 1.4;">{{ order.shipping_address }}</p>
+                                </div>
+                                <div class="col-md-3 border-start">
+                                    <p class="small fw-bold text-muted mb-1">PAYMENT</p>
+                                    <p class="small mb-0 text-uppercase fw-bold text-dark">{{ order['payment_method'].upper() }}</p>
+                                    {% if order.payment_screenshot != 'none' %}
+                                    <a href="{{ url_for('static', filename=order.payment_screenshot) }}" target="_blank" class="btn btn-sm px-4 btn-filter mt-2 py-1 px-3" style="font-size: 0.7rem;">
+                                        <i class="bi bi-paperclip"></i> View Attachment
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-5 border-start">
+                                    <p class="small fw-bold text-muted mb-1">FULL BREAKDOWN</p>
+                                    <div class="bg-white border rounded p-3">
+                                        {% for item in order.products_list %}
+                                        <div class="d-flex justify-content-between align-items-start py-2 {% if not loop.last %}border-bottom border-light{% endif %}" style="font-size: 0.75rem;">
+                                            <div class="pe-3" style="flex: 1; min-width: 0;">
+                                                <span class="text-dark fw-medium d-block mb-1" style="line-height: 1.2; word-wrap: break-word;">
+                                                    {{ item.name }}
+                                                </span>
+                                                <span class="text-muted small">Qty: {{ item.quantity }}</span>
+                                            </div>
+                                            <div class="text-end" style="min-width: 80px;">
+                                                <span class="fw-bold text-brown">₱{{ "{:,.2f}".format(item.price * item.quantity) }}</span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not orders %}
+            <div class="text-center py-5">
+                <p class="text-muted">No orders found in this category.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

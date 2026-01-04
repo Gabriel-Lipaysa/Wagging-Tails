@@ -55,8 +55,7 @@
                             {{ session.get('name') or 'User' }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#ordersSidebar">My Orders</a></li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#historySidebar">My History</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('user.order_history', status='all') }}">My Orders</a></li>
                             <li><a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#reviewsSidebar">My Reviews</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('user.user_logout') }}">Logout</a></li>
@@ -178,20 +177,6 @@
             <!-- Order details will be loaded here dynamically -->
             <div id="my-orders">
                 <!-- Ongoing and completed orders -->
-            </div>
-        </div>
-    </div>
-
-    <!-- History Sidebar -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="historySidebar" aria-labelledby="historySidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="historySidebarLabel">My History</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div id="my-history">
-                <!-- Completed orders will be loaded here dynamically -->
             </div>
         </div>
     </div>
@@ -511,5 +496,27 @@
 
             observer.observe(relatedProducts);
         }
+
+        // --- 5. ORDER HISTORY LOGIC ---
+        const detailContainers = document.querySelectorAll('.collapse');
+        detailContainers.forEach(container => {
+            // When the details open
+            container.addEventListener('show.bs.collapse', function () {
+                const orderId = this.id.split('-')[1];
+                const btn = document.querySelector(`[data-bs-target="#details-${orderId}"]`);
+                if (btn) {
+                    btn.innerHTML = 'HIDE DETAILS <i class="bi bi-chevron-up"></i>';
+                }
+            });
+
+            // When the details close
+            container.addEventListener('hide.bs.collapse', function () {
+                const orderId = this.id.split('-')[1];
+                const btn = document.querySelector(`[data-bs-target="#details-${orderId}"]`);
+                if (btn) {
+                    btn.innerHTML = 'VIEW DETAILS <i class="bi bi-chevron-down"></i>';
+                }
+            });
+        });
     });
 </script>

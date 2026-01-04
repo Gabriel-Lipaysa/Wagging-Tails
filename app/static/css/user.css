@@ -238,3 +238,78 @@ a{
 .dasboard-container h1, p{
     color:white
 }
+
+/* Custom Active Filter Color */
+#orderFilters .nav-link.active {
+    background-color: #6a705d; /* Your Navbar Green */
+}
+
+#orderFilters .nav-link {
+    color: #6a705d;
+}
+
+/* Tracking Step Highlight */
+.step-active {
+    background-color: #CB997E !important;
+    border-color: #CB997E !important;
+    color: white !important;
+}
+
+.bg-brown {
+    background-color: #CB997E !important;
+}
+.text-brown {
+    color: #CB997E !important;
+}
+
+/* Custom horizontal line in the tracker */
+.stepper-wrapper {
+    margin-bottom: 2rem;
+}
+
+/* Product list styling inside cards */
+.uppercase {
+    text-transform: uppercase;
+}
+
+/* Button link focus remove */
+.btn-link:focus {
+    box-shadow: none;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+/* Brand Filter Buttons */
+.btn-filter {
+    border-radius: 8px;
+    font-size: 0.85rem;
+    border: 1px solid #CB997E;
+    color: #CB997E;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+.btn-filter:hover {
+    background-color: #CB997E;
+    color: white;
+}
+.btn-filter.active {
+    background-color: #CB997E !important;
+    color: white !important;
+    box-shadow: 0 4px 6px rgba(203, 153, 126, 0.2);
+}
+
+/* Row Hover Effect */
+.order-row-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.text-brown {
+    color: #CB997E !important;
+}
