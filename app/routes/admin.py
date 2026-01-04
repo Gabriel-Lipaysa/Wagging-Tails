@@ -13,11 +13,8 @@ def validate(str, msg, path):
         flash(msg,'warning')
         return 
 
-
-
 @admin.route('/login/admin', methods=['GET', 'POST'])
 def admin_login():
-
     if session.get('role') == 'admin':
         return redirect(url_for('admin.dashboard'))
 
@@ -43,7 +40,6 @@ def logout():
     flash('Logged out successfully!', 'success')
     return redirect(url_for('admin.admin_login'))
 
-
 @admin.route('/admin/dashboard')
 def dashboard():
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
@@ -58,12 +54,11 @@ def show_products():
     if check:
         return check
     
-    dogFoods = db.query_all("SELECT * FROM products where category='Dog Food'")
-    catFoods = db.query_all("SELECT * FROM products where category='Cat Food'")
+    # Fetch only active products and show the "Low Stock" status for relevant products
+    dogFoods = db.query_all("SELECT * FROM products WHERE category='Dog Food' AND is_active=1")
+    catFoods = db.query_all("SELECT * FROM products WHERE category='Cat Food' AND is_active=1")
 
     return render_template('admin/products/index.html', dogFoods=dogFoods, catFoods=catFoods)
-
-
 
 @admin.route('/admin/products/create', methods=['GET'])
 def show_create_form():
@@ -72,7 +67,6 @@ def show_create_form():
         return check
 
     return render_template('admin/products/create.html')
-
 
 @admin.route('/admin/products/store', methods=['POST'])
 def store_product():
@@ -215,7 +209,6 @@ def update_product(id):
 
     flash('Product updated successfully.', 'success')
     return redirect(url_for('admin.show_products'))
-
 
 @admin.route('/admin/products/delete/<int:id>', methods=['POST'])
 def delete_product(id):

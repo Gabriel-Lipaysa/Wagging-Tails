@@ -28,38 +28,50 @@
                     <th>Description</th>
                     <th>Price (₱)</th>
                     <th>Quantity</th>
+                    <th>Stock Status</th>
                     <th style="width: 150px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
             {% if dogFoods %}
                 {% for dogFood in dogFoods %}
-                    <tr>
-                        <td class="fw-semibold">{{ dogFood['name'] }}</td>
-                        <td>
-                            {% if dogFood['image'] %}
-                                <img src="{{ url_for('static', filename=dogFood['image']) }}" width="60" alt="{{ dogFood['name'] }}">
-                            {% else %}
-                                <span class="text-muted">No image</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ dogFood['description'] }}</td>
-                        <td class="text-center">₱{{ "{:,.2f}".format(dogFood['price']) }}</td>
-                        <td class="text-center">{{ dogFood['quantity'] }}</td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2"> 
-                                <a href="{{ url_for('admin.show_edit_form', id=dogFood['id']) }}" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="{{ url_for('admin.delete_product', id=dogFood['id']) }}" method="POST" class="m-0">
-                                    <input class="btn btn-sm btn-danger" type="submit" value="Delete" 
-                                    onclick="return confirm('Are you sure you want to delete this product?')">
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                    {% if dogFood['is_active'] == 1 %}
+                        <tr>
+                            <td class="fw-semibold">{{ dogFood['name'] }}</td>
+                            <td>
+                                {% if dogFood['image'] %}
+                                    <img src="{{ url_for('static', filename=dogFood['image']) }}" width="60" alt="{{ dogFood['name'] }}">
+                                {% else %}
+                                    <span class="text-muted">No image</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ dogFood['description'] }}</td>
+                            <td class="text-center">₱{{ "{:,.2f}".format(dogFood['price']) }}</td>
+                            <td class="text-center">{{ dogFood['quantity'] }}</td>
+                            <td class="text-center">
+                                {% if dogFood['quantity'] == 0 %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                {% elif dogFood['quantity'] <= 5 %}
+                                    <span class="badge bg-warning text-dark">Low Stock</span>
+                                {% else %}
+                                    <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2"> 
+                                    <a href="{{ url_for('admin.show_edit_form', id=dogFood['id']) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ url_for('admin.delete_product', id=dogFood['id']) }}" method="POST" class="m-0">
+                                        <input class="btn btn-sm btn-danger" type="submit" value="Delete" 
+                                        onclick="return confirm('Are you sure you want to delete this product?')">
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="6" class="text-center text-muted">No dog food products yet.</td>
+                    <td colspan="7" class="text-center text-muted">No dog food products yet.</td>
                 </tr>
             {% endif %}
             </tbody>
@@ -76,38 +88,50 @@
                     <th>Description</th>
                     <th>Price (₱)</th>
                     <th>Quantity</th>
+                    <th>Stock Status</th>
                     <th style="width: 150px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
             {% if catFoods %}
                 {% for catFood in catFoods %}
-                    <tr>
-                        <td class="fw-semibold">{{ catFood['name'] }}</td>
-                        <td>
-                            {% if catFood['image'] %}
-                                <img src="{{ url_for('static', filename=catFood['image']) }}" width="60" alt="{{ catFood['name'] }}">
-                            {% else %}
-                                <span class="text-muted">No image</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ catFood['description'] }}</td>
-                        <td class="text-center">₱{{ "{:,.2f}".format(catFood['price']) }}</td>
-                        <td class="text-center">{{ catFood['quantity'] }}</td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2"> 
-                                <a href="{{ url_for('admin.show_edit_form', id=catFood['id']) }}" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="{{ url_for('admin.delete_product', id=catFood['id']) }}" method="POST" class="m-0">
-                                    <input class="btn btn-sm btn-danger" type="submit" value="Delete" 
-                                    onclick="return confirm('Are you sure you want to delete this product?')">
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                    {% if catFood['is_active'] == 1 %}
+                        <tr>
+                            <td class="fw-semibold">{{ catFood['name'] }}</td>
+                            <td>
+                                {% if catFood['image'] %}
+                                    <img src="{{ url_for('static', filename=catFood['image']) }}" width="60" alt="{{ catFood['name'] }}">
+                                {% else %}
+                                    <span class="text-muted">No image</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ catFood['description'] }}</td>
+                            <td class="text-center">₱{{ "{:,.2f}".format(catFood['price']) }}</td>
+                            <td class="text-center">{{ catFood['quantity'] }}</td>
+                            <td class="text-center">
+                                {% if catFood['quantity'] == 0 %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                {% elif catFood['quantity'] <= 5 %}
+                                    <span class="badge bg-warning text-dark">Low Stock</span>
+                                {% else %}
+                                    <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2"> 
+                                    <a href="{{ url_for('admin.show_edit_form', id=catFood['id']) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ url_for('admin.delete_product', id=catFood['id']) }}" method="POST" class="m-0">
+                                        <input class="btn btn-sm btn-danger" type="submit" value="Delete" 
+                                        onclick="return confirm('Are you sure you want to delete this product?')">
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="6" class="text-center text-muted">No cat food products yet.</td>
+                    <td colspan="7" class="text-center text-muted">No cat food products yet.</td>
                 </tr>
             {% endif %}
             </tbody>

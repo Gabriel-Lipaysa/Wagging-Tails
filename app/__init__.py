@@ -1,36 +1,48 @@
 from flask import Flask
-from flask_bcrypt import Bcrypt
-from flask_mysqldb import MySQL
+import mysql.connector
 import os
-
-mysql = MySQL()  
 
 class DBHelper:
     @staticmethod
+    def get_connection():
+        return mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='',
+            database='elec4_endterm'
+        )
+
+    @staticmethod
     def query_one(sql, params=()):
-        cursor = mysql.connection.cursor()
-        cursor.execute(sql,params)
+        conn = DBHelper.get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(sql, params)
         row = cursor.fetchone()
         cursor.close()
+        conn.close()
         return row
 
     @staticmethod
     def query_all(sql, params=()):
-        cur = mysql.connection.cursor()
-        cur.execute(sql, params)
-        rows = cur.fetchall()
-        cur.close()
+        conn = DBHelper.get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
         return rows
-    
+
     @staticmethod
     def execute(sql, params=()):
-        cursor = mysql.connection.cursor()
+        conn = DBHelper.get_connection()
+        cursor = conn.cursor()
         cursor.execute(sql, params)
-        mysql.connection.commit()
+        conn.commit()
         last_id = cursor.lastrowid
         cursor.close()
+        conn.close()
         return last_id
-    
+
 db = DBHelper
 
 def init_app():
@@ -42,12 +54,10 @@ def init_app():
     app.config['MYSQL_USER'] = 'root'
     app.config['MYSQL_PASSWORD'] = ''
     app.config['MYSQL_DB'] = 'elec4_endterm'
-    app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 
-    mysql.init_app(app)
-
+    # Register blueprints
     from app.routes.admin import admin
     from app.routes.user import user
     app.register_blueprint(admin)
