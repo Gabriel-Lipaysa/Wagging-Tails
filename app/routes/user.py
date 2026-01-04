@@ -486,3 +486,34 @@ def process_order():
         return redirect(url_for('user.home'))
 
     return redirect(url_for('user.home'))
+
+@user.route('/orders', methods=['GET'])
+def order_history():
+    uid = session.get('user_id')
+    if not uid:
+        return redirect(url_for('user.login'))
+
+    # 1. Fetch all orders for this user
+    status_filter = request.args.get('status')
+
+    if status_filter != 'all':
+        query = "SELECT * FROM orders WHERE user_id = %s AND status = %s ORDER BY created_at DESC"
+        params = (uid, status_filter)
+    else:
+        query = "SELECT * FROM orders WHERE user_id = %s ORDER BY created_at DESC"
+        params = (uid,)
+
+    orders = db.query_all(query, params)
+
+    # 2. For each order, fetch its items
+    for order in orders:
+        order['products_list'] = db.query_all("""
+            SELECT oi.*, p.name, p.image 
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = %s
+        """, (order['id'],))
+        
+        order['extra_items'] = len(order['products_list']) - 1
+
+    return render_template('user/orders.html', orders=orders)
