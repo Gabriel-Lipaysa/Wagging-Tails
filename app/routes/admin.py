@@ -82,6 +82,7 @@ def store_product():
     
     category = request.form.get('category')
     name = request.form.get('name').strip()
+    brand = request.form.get('brand').strip()
     description = request.form.get('description').strip()
     price = request.form.get('price')
     quantity = request.form.get('quantity')
@@ -94,6 +95,10 @@ def store_product():
         flash('Description is required.', 'warning')
         return redirect(url_for('admin.show_create_form'))
     
+    if not brand:
+        flash('Brand is required.', 'warning')
+        return redirect(url_for('admin.show_create_form'))
+    
     image = request.files.get('image')
     rel_path = None
     if image and image.filename:
@@ -103,7 +108,7 @@ def store_product():
             return redirect(url_for('admin.show_create_form'))
     
     try:
-        db.execute("INSERT INTO products (name, description, price, quantity, image, category) VALUES (%s,%s,%s,%s,%s,%s)", params=(name, description, price, quantity, rel_path, category))
+        db.execute("INSERT INTO products (name, brand ,description, price, quantity, image, category) VALUES (%s,%s,%s,%s,%s,%s,%s)", params=(name, brand, description, price, quantity, rel_path, category))
     except Exception as e:
         if rel_path:
             try:
@@ -145,6 +150,7 @@ def update_product(id):
     
     category = request.form.get('category')
     name = request.form.get('name').strip()
+    brand = request.form.get('brand').strip()
     description = request.form.get('description').strip()
     price = request.form.get('price')
     quantity = request.form.get('quantity')
@@ -155,6 +161,10 @@ def update_product(id):
 
     if not description:
         flash('Description is required.', 'warning')
+        return redirect(url_for('admin.show_edit_form'))
+    
+    if not brand:
+        flash('Brand is required.', 'warning')
         return redirect(url_for('admin.show_edit_form'))
     
     try:
@@ -183,7 +193,7 @@ def update_product(id):
     final_image = new_path if new_path else product.get('image')
 
     try:
-        db.execute("UPDATE products SET name=%s,description=%s, price=%s, quantity=%s, image=%s, category=%s WHERE id=%s", params=(name, description, price_val, quantity_val, final_image, category, id))
+        db.execute("UPDATE products SET name=%s, brand=%s, description=%s, price=%s, quantity=%s, image=%s, category=%s WHERE id=%s", params=(name, brand, description, price_val, quantity_val, final_image, category, id))
     except Exception as e:
         if new_path:
             try:

@@ -26,7 +26,7 @@
 
         <div class="col-md-5 ">
             <div id="floating-info" class="sticky-top" style="top: 40px; transition: opacity 0.4s ease, transform 0.4s ease; z-index: 1;">
-                <h5 style="font-size: small;">Brand Name</h5>
+                <h5 style="font-size: small; letter-spacing: 2px;">{{product['brand'].upper()}}</h5>
                 <div class="d-flex justify-content-between align-items-start">
                     <h1 class="display-6 fw-bold" style="color: #5A604D;">{{ product.name }}</h1>
                     <button class="btn btn-outline-danger border-0 shadow-none" onclick="toggleWishlist({{ product.id }}, this)">
