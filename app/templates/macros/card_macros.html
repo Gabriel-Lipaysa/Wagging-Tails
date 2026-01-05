@@ -9,11 +9,12 @@
             New
         </span>
 
-        <!-- Wishlist Heart -->
+        <!-- Wishlist Heart (AJAX - Instant Update) -->
         <button class="btn btn-link position-absolute top-0 end-0 m-2 text-danger shadow-none" 
                 style="z-index: 10;" 
                 onclick="toggleWishlist({{ product.id }}, this)">
-            <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-5"></i>
+            <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-5 wishlist-heart"
+               data-product-id="{{ product.id }}"></i>
         </button>
 
         <!-- Out of Stock Overlay -->

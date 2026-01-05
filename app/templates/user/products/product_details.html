@@ -18,8 +18,6 @@
                 {% endif %}
             </div>
             
-            
-
             <div class="mb-5">
                 <h5 class="fw-bold">Description</h5>
                 <p class="text-muted">{{ product.description }}</p>
@@ -31,8 +29,6 @@
                     <p class="text-muted italic">"Great quality product!" - ⭐⭐⭐⭐⭐</p>
                 </div>
             </div>
-
-            
         </div>
 
         <div class="col-md-5">
@@ -40,8 +36,12 @@
                 <h5 style="font-size: small; letter-spacing: 2px;">{{product['brand'].upper()}}</h5>
                 <div class="d-flex justify-content-between align-items-start">
                     <h1 class="display-6 fw-bold" style="color: #5A604D;">{{ product.name }}</h1>
-                    <button class="btn btn-outline-danger border-0 shadow-none" onclick="toggleWishlist({{ product.id }}, this)">
-                        <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-3"></i>
+                    
+                    <!-- Main Product Wishlist Heart (AJAX - Instant Update) -->
+                    <button class="btn btn-outline-danger border-0 shadow-none" 
+                            onclick="toggleWishlist({{ product.id }}, this)">
+                        <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-3 wishlist-heart"
+                           data-product-id="{{ product.id }}"></i>
                     </button>
                 </div>
                 
@@ -50,47 +50,47 @@
                 <hr>
                 
                 <div class="my-4">
-                        {% if product.quantity == 0 %}
-                            <span class="badge bg-danger p-2">Out of Stock</span>
-                        {% elif product.quantity <= 5 %}
-                            <span class="badge bg-warning text-dark p-2">Low Stock ({{ product.quantity }})</span>
-                        {% else %}
-                            <span class="badge bg-success p-2">In Stock ({{ product.quantity }})</span>
-                        {% endif %}
+                    {% if product.quantity == 0 %}
+                        <span class="badge bg-danger p-2">Out of Stock</span>
+                    {% elif product.quantity <= 5 %}
+                        <span class="badge bg-warning text-dark p-2">Low Stock ({{ product.quantity }})</span>
+                    {% else %}
+                        <span class="badge bg-success p-2">In Stock ({{ product.quantity }})</span>
+                    {% endif %}
                 </div>
 
                 <div class="d-flex align-items-center mb-4">
                     <span class="me-3 fw-bold" style="color: #6a705d;">Quantity:</span>
                     <div class="input-group border rounded" style="max-width: 140px; border-color: #6a705d !important;">
-                            <input type="number"
-                                   id="pdp-quantity"
-                                   name="quantity"
-                                   class="form-control text-center border-0 bg-transparent fw-bold"
-                                   value="1"
-                                   min="1"
-                                   {% if product.quantity > 0 %}
-                                       max="{{ product.quantity }}"
-                                   {% else %}
-                                       value="0" disabled
-                                   {% endif %}
-                                   style="appearance: none; -moz-appearance: textfield; width: 60px;">
+                        <input type="number"
+                               id="pdp-quantity"
+                               name="quantity"
+                               class="form-control text-center border-0 bg-transparent fw-bold"
+                               value="1"
+                               min="1"
+                               {% if product.quantity > 0 %}
+                                   max="{{ product.quantity }}"
+                               {% else %}
+                                   value="0" disabled
+                               {% endif %}
+                               style="appearance: none; -moz-appearance: textfield; width: 60px;">
                     </div>
                 </div>
 
                 <div class="d-grid gap-2 mt-4">
-                        <button id="pdp-add-to-cart" 
-                                class="btn btn-lg py-3 fw-bold" 
-                                style="background-color: {% if product.quantity > 0 %}#6B705C{% else %}#999999{% endif %}; 
-                                       color: white; 
-                                       border-radius: 5px;
-                                       cursor: {% if product.quantity == 0 %}not-allowed{% else %}pointer{% endif %};"
-                                onclick="{% if product.quantity > 0 %}addToCartFromPDP({{ product.id }}){% endif %}"
-                                {% if product.quantity == 0 %}disabled{% endif %}>
-                            {% if product.quantity > 0 %}
-                                Add to Cart
-                            {% else %}
-                                Out of Stock
-                            {% endif %}
+                    <button id="pdp-add-to-cart" 
+                            class="btn btn-lg py-3 fw-bold" 
+                            style="background-color: {% if product.quantity > 0 %}#6B705C{% else %}#999999{% endif %}; 
+                                   color: white; 
+                                   border-radius: 5px;
+                                   cursor: {% if product.quantity == 0 %}not-allowed{% else %}pointer{% endif %};"
+                            onclick="{% if product.quantity > 0 %}addToCartFromPDP({{ product.id }}){% endif %}"
+                            {% if product.quantity == 0 %}disabled{% endif %}>
+                        {% if product.quantity > 0 %}
+                            Add to Cart
+                        {% else %}
+                            Out of Stock
+                        {% endif %}
                     </button>
                 </div>
             </div>
