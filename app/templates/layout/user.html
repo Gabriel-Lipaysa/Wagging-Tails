@@ -274,6 +274,7 @@
     };
 
     // This function handles BOTH single trash icon clicks AND the bulk remove button
+    // UPDATED: Now updates ALL hearts on the page instantly after toggle
     window.toggleWishlist = function(productId, btnElement) {
         fetch(`/wishlist/toggle/${productId}`, {
             method: 'POST'
@@ -293,7 +294,15 @@
                 }
             }
 
-            // 2. Check if the Wishlist Sidebar is currently open
+            // 2. Update ALL heart icons for this product ID on the page
+            const isWishlisted = data.is_wishlisted;
+            const newIconClass = isWishlisted ? 'bi-heart-fill' : 'bi-heart';
+            document.querySelectorAll(`i[data-product-id="${productId}"]`).forEach(icon => {
+                icon.classList.remove('bi-heart', 'bi-heart-fill');
+                icon.classList.add(newIconClass);
+            });
+
+            // 3. Check if the Wishlist Sidebar is currently open
             const wishlistSidebar = document.getElementById('wishlistSidebar');
             if (wishlistSidebar && wishlistSidebar.classList.contains('show')) {
                 // Re-fetch the list so the item disappears from the sidebar immediately
