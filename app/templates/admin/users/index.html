@@ -1,0 +1,109 @@
+{% extends 'layout/admin.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="color: #6B705C;">Customer Management</h2>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">
+        ← Back to Dashboard
+    </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-center">
+                        <th style="width: 60px;">#</th>
+                        <th>Customer Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users %}
+                        {% for user in users %}
+                        <tr class="{% if not user.is_active %}table-danger table-opacity-75{% else %}table-light{% endif %}">
+                            <td class="text-center fw-medium">{{ loop.index }}</td>
+                            <td class="fw-semibold">{{ user.name }}</td>
+                            <td>
+                                <code class="bg-light px-3 py-1 rounded small">{{ user.username }}</code>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ user.email }}</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill px-3 py-2 
+                                    {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-center text-muted small">
+                                {{ user.joined_date }}
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Reset Password -->
+                                    <form method="POST" action="{{ url_for('admin.reset_user_password', id=user.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Reset password for {{ user.name }}? New password will be sent via email.')">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Reset Password">
+                                            <i class="bi bi-key"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Toggle Status -->
+                                    <form method="POST" action="{{ url_for('admin.toggle_user_status', id=user.id) }}" 
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm 
+                                            {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
+                                            title="{% if user.is_active %}Deactivate Account{% else %}Activate Account{% endif %}">
+                                            <i class="bi bi-{% if user.is_active %}ban{% else %}check-circle{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-people display-4 mb-3 opacity-50"></i>
+                                <p class="mb-0 fw-medium">No customer accounts found</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if users %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <small class="text-muted">
+            Showing <strong>{{ users|length }}</strong> customer{{ 's' if users|length != 1 else '' }} in total
+        </small>
+    </div>
+    <div class="col-md-6 text-end">
+        <small class="text-muted">
+            Last updated: <strong>{{ last_updated }}</strong>
+        </small>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

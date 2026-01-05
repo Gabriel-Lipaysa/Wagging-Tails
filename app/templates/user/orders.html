@@ -10,10 +10,10 @@
             <div class="d-flex flex-row justify-content-between">
                 <div class="d-flex gap-2 mb-4">
                     {% set current_status = request.args.get('status', 'all') %}
-                    {% for status in ['all', 'Pending', 'Shipped', 'Delivered'] %}
+                    {% for status in ['all', 'Pending', 'Shipped', 'Delivered', 'Declined'] %}
                     <a href="{{ url_for('user.order_history', status=status) }}" 
-                    class="btn btn-sm px-4 btn-filter {% if current_status == status %}active{% endif %}">
-                    {{ status | capitalize }}
+                       class="btn btn-sm px-4 btn-filter {% if current_status == status %}active{% endif %}">
+                        {{ status | capitalize }}
                     </a>
                     {% endfor %}
                 </div>
@@ -40,7 +40,7 @@
                         
                         <div class="col-6 col-md-2">
                             <span class="d-md-none text-muted small d-block">Date:</span>
-                            <span class="text-secondary">{{ order.created_at.strftime('%B %d, %Y') }}</span>
+                            <span class="text-secondary">{{ order.formatted_date }}</span>
                         </div>
 
                         <div class="col-12 col-md-3 mt-3 mt-md-0">
@@ -62,9 +62,21 @@
 
                         <div class="col-6 col-md-3 mt-3 mt-md-0 text-md-center">
                             <span class="badge rounded-pill px-3 py-2" 
-                                  style="font-size: 0.7rem; background-color: {% if order.status == 'Pending' %}#CB997E{% elif order.status == 'Shipped' %}#6a705d{% else %}#5A604D{% endif %};">
+                                  style="font-size: 0.7rem; 
+                                         background-color: 
+                                         {% if order.status == 'Pending' %}#CB997E
+                                         {% elif order.status == 'Shipped' %}#6a705d
+                                         {% elif order.status == 'Delivered' %}#d4edda
+                                         {% elif order.status == 'Declined' %}#f8d7da
+                                         {% else %}#5A604D{% endif %};">
                                 {{ order.status }}
                             </span>
+
+                            {% if order.status == 'Declined' and order.decline_reason %}
+                            <div class="mt-2 small text-danger fw-medium">
+                                Reason: {{ order.decline_reason }}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <div class="col-6 col-md-2 mt-3 mt-md-0 text-end">
@@ -86,7 +98,7 @@
                                 </div>
                                 <div class="col-md-3 border-start">
                                     <p class="small fw-bold text-muted mb-1">PAYMENT</p>
-                                    <p class="small mb-0 text-uppercase fw-bold text-dark">{{ order['payment_method'].upper() }}</p>
+                                    <p class="small mb-0 text-uppercase fw-bold text-dark">{{ order.payment_method|upper }}</p>
                                     {% if order.payment_screenshot != 'none' %}
                                     <a href="{{ url_for('static', filename=order.payment_screenshot) }}" target="_blank" class="btn btn-sm px-4 btn-filter mt-2 py-1 px-3" style="font-size: 0.7rem;">
                                         <i class="bi bi-paperclip"></i> View Attachment

@@ -1,59 +1,90 @@
 {% extends 'layout/admin.html' %}
 
 {% block content %}
-<div class="container py-4">
-    <h2>Add New Product</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="color: #6B705C;">Add New Product</h2>
+    <a href="/admin/products" class="btn btn-secondary btn-sm">
+        ← Back to Products
+    </a>
+</div>
 
-    {% with messages = get_flashed_messages(with_categories=true)%}
-        {% if messages %}
-            {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-    <form method="POST" action="/admin/products/store" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="category" class="form-label">Category</label>
-            <select name="category" class="form-select" required>
-                <option value="">Select Category</option>
-                <option value="Dog Food">Dog Food</option>
-                <option value="Cat Food">Cat Food</option>
-            </select>
-        </div>
+<div class="card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
+    <div class="card-body p-4 p-md-5">
+        <form method="POST" action="/admin/products/store" enctype="multipart/form-data">
+            <div class="row g-4">
+                <!-- Category -->
+                <div class="col-md-6">
+                    <label for="category" class="form-label fw-semibold">Category</label>
+                    <select name="category" id="category" class="form-select form-select-lg" required>
+                        <option value="">Select Category</option>
+                        <option value="Dog Food">Dog Food</option>
+                        <option value="Cat Food">Cat Food</option>
+                    </select>
+                </div>
 
-        <div class="mb-3">
-            <label for="name" class="form-label">Product Name</label>
-            <input type="text" name='name' class='form-control' required>
-        </div>
+                <!-- Product Name -->
+                <div class="col-md-6">
+                    <label for="name" class="form-label fw-semibold">Product Name</label>
+                    <input type="text" name="name" id="name" class="form-control form-control-lg" 
+                           placeholder="Enter product name" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="brand" class="form-label">Brand</label>
-            <input type="text" name='brand' class='form-control' required>
-        </div>
+                <!-- Brand -->
+                <div class="col-md-6">
+                    <label for="brand" class="form-label fw-semibold">Brand</label>
+                    <input type="text" name="brand" id="brand" class="form-control form-control-lg" 
+                           placeholder="Enter brand name" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="image" class="form-label">Upload Image</label>
-            <input type="file" name="image" class="form-control" required>
-        </div>
+                <!-- Price -->
+                <div class="col-md-6">
+                    <label for="price" class="form-label fw-semibold">Price (₱)</label>
+                    <input type="number" name="price" id="price" step="0.01" min="0.01" 
+                           class="form-control form-control-lg" placeholder="0.00" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3" required></textarea>
-        </div>
+                <!-- Quantity -->
+                <div class="col-md-6">
+                    <label for="quantity" class="form-label fw-semibold">Quantity</label>
+                    <input type="number" name="quantity" id="quantity" min="1" 
+                           class="form-control form-control-lg" placeholder="Enter stock quantity" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="price" class="form-label">Price (₱)</label>
-            <input type="number" name="price" class="form-control" min="1" required>
-        </div>
+                <!-- Upload Image -->
+                <div class="col-12">
+                    <label for="image" class="form-label fw-semibold">Upload Image <span class="text-danger">*</span></label>
+                    <input type="file" name="image" id="image" class="form-control form-control-lg" 
+                           accept="image/*" required>
+                    <div class="form-text">Accepted formats: JPG, PNG, GIF (Max 5MB recommended)</div>
+                </div>
 
-        <div class="mb-3">
-            <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" name="quantity" class="form-control" min="1" required>
-        </div>
+                <!-- Description -->
+                <div class="col-12">
+                    <label for="description" class="form-label fw-semibold">Description</label>
+                    <textarea name="description" id="description" class="form-control" 
+                              rows="6" placeholder="Describe the product features, benefits, ingredients, etc." required></textarea>
+                </div>
+            </div>
 
-        <button type="submit" class="btn btn-success">Add Product</button>
-        <a href="/admin/dashboard" class="btn btn-secondary">Back</a>
-    </form>
+            <div class="d-flex gap-3 mt-5">
+                <button type="submit" class="btn btn-success btn-lg px-5" 
+                        style="background-color: #6B705C; border: none;">
+                    Add Product
+                </button>
+                <a href="/admin/products" class="btn btn-light btn-lg px-5">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

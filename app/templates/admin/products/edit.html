@@ -1,61 +1,105 @@
 {% extends 'layout/admin.html' %}
 
 {% block content %}
-<div class="container py-4">
-    <h2 class="mb-4" style="color: #6B705C;">Edit Product</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0" style="color: #6B705C;">Edit Product</h2>
+    <a href="/admin/products" class="btn btn-secondary btn-sm">
+        ← Back to Products
+    </a>
+</div>
 
-    <form action="{{ url_for('admin.update_product', id=product['id']) }}" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="name" class="form-label">Product Name</label>
-            <input type="text" name="name" class="form-control" value="{{ product['name'] }}" required>
-        </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
-        <div class="mb-3">
-            <label for="brand" class="form-label">Product Name</label>
-            <input type="text" name="brand" class="form-control" value="{{ product['brand'] }}" required>
-        </div>
+<div class="card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
+    <div class="card-body p-4 p-md-5">
+        <form action="{{ url_for('admin.update_product', id=product['id']) }}" method="POST" enctype="multipart/form-data">
+            <div class="row g-4">
+                <!-- Product Name -->
+                <div class="col-md-6">
+                    <label for="name" class="form-label fw-semibold">Product Name</label>
+                    <input type="text" name="name" id="name" class="form-control form-control-lg" 
+                           value="{{ product['name'] }}" required>
+                </div>
 
-        <div class="mb-3">
-            <label class="form-label">Current Image:</label><br>
-            {% if product['image'] %}
-                <img src="{{ url_for('static', filename=product['image']) }}" width="100" class="mb-2">
-            {% else %}
-                <p>No image uploaded</p>
-            {% endif %}
-        </div>
+                <!-- Brand -->
+                <div class="col-md-6">
+                    <label for="brand" class="form-label fw-semibold">Brand</label>
+                    <input type="text" name="brand" id="brand" class="form-control form-control-lg" 
+                           value="{{ product['brand'] }}" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="image" class="form-label">Change Image</label>
-            <input type="file" name="image" class="form-control">
-        </div>
+                <!-- Category -->
+                <div class="col-md-6">
+                    <label for="category" class="form-label fw-semibold">Category</label>
+                    <select name="category" id="category" class="form-select form-select-lg" required>
+                        <option value="">Select Category</option>
+                        <option value="Dog Food" {% if product['category'] == 'Dog Food' %}selected{% endif %}>Dog Food</option>
+                        <option value="Cat Food" {% if product['category'] == 'Cat Food' %}selected{% endif %}>Cat Food</option>
+                    </select>
+                </div>
 
+                <!-- Price -->
+                <div class="col-md-6">
+                    <label for="price" class="form-label fw-semibold">Price (₱)</label>
+                    <input type="number" name="price" id="price" step="0.01" class="form-control form-control-lg" 
+                           value="{{ product['price'] }}" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3" required>{{ product['description'] }}</textarea>
-        </div>
+                <!-- Quantity -->
+                <div class="col-md-6">
+                    <label for="quantity" class="form-label fw-semibold">Quantity</label>
+                    <input type="number" name="quantity" id="quantity" class="form-control form-control-lg" 
+                           value="{{ product['quantity'] }}" required>
+                </div>
 
-        <div class="mb-3">
-            <label for="price" class="form-label">Price (₱)</label>
-            <input type="number" name="price" step="0.01" class="form-control" value="{{ product['price'] }}" required>
-        </div>
+                <!-- Current Image -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Current Image</label>
+                    <div class="mt-2">
+                        {% if product['image'] %}
+                            <img src="{{ url_for('static', filename=product['image']) }}" 
+                                 alt="Current product image" class="rounded shadow-sm" 
+                                 style="width: 200px; height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="border rounded d-inline-flex align-items-center justify-content-center bg-light text-muted"
+                                 style="width: 200px; height: 200px;">
+                                <span class="small">No image uploaded</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
 
-        <div class="mb-3">
-            <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" name="quantity" class="form-control" value="{{ product['quantity'] }}" required>
-        </div>
+                <!-- Change Image -->
+                <div class="col-12">
+                    <label for="image" class="form-label fw-semibold">Change Image (optional)</label>
+                    <input type="file" name="image" id="image" class="form-control form-control-lg" accept="image/*">
+                    <div class="form-text">Leave blank to keep current image.</div>
+                </div>
 
-        <div class="mb-3">
-            <label for="category" class="form-label">Category</label>
-            <select name="category" class="form-select" required>
-                <option value="">Select Category</option>
-                <option value="Dog Food" {% if product['category'] == 'Dog Food' %}selected{% endif %}>Dog Food</option>
-                <option value="Cat Food" {% if product['category'] == 'Cat Food' %}selected{% endif %}>Cat Food</option>
-            </select>
-        </div>
+                <!-- Description -->
+                <div class="col-12">
+                    <label for="description" class="form-label fw-semibold">Description</label>
+                    <textarea name="description" id="description" class="form-control" rows="5" required>{{ product['description'] }}</textarea>
+                </div>
+            </div>
 
-        <button type="submit" class="btn btn-primary">Update Product</button>
-        <a href="/admin/products" class="btn btn-secondary">Cancel</a>
-    </form>
+            <div class="d-flex gap-3 mt-5">
+                <button type="submit" class="btn btn-primary btn-lg px-5" 
+                        style="background-color: #CB997E; border: none;">
+                    Update Product
+                </button>
+                <a href="/admin/products" class="btn btn-light btn-lg px-5">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

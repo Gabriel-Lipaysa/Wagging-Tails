@@ -14,22 +14,27 @@ def show_user_login():
     if session.get('role') == 'user':
         return redirect(url_for('user.home'))
 
-    # Validate login form
     if request.method == "POST":
         email = request.form.get('email')
         password = request.form.get('password')
 
-        user = db.query_one("SELECT * FROM users WHERE email=%s",(email,))
+        user = db.query_one("SELECT * FROM users WHERE email=%s", (email,))
 
-        if user and user['password'] == password:
+        if user and user['password'] == password and user['is_active'] == 1:
             session['user_id'] = user['id']
             session['role'] = 'user'
             session['email'] = email
             flash('User logged in successfully!', 'success')
             return redirect(url_for('user.home'))
         else:
-            flash('Invalid email or password.', 'danger')
+            if user and user['is_active'] == 0:
+                flash('Your account has been deactivated. Please contact support.', 'danger')
+            else:
+                flash('Invalid email or password.', 'danger')
+            # Important: redirect back to login on failed POST
+            return redirect(url_for('user.show_user_login'))
 
+    # GET request — show login form
     return render_template('auth/user-login.html')
 
 
@@ -491,29 +496,52 @@ def process_order():
 def order_history():
     uid = session.get('user_id')
     if not uid:
-        return redirect(url_for('user.login'))
+        return redirect(url_for('user.show_user_login'))
 
-    # 1. Fetch all orders for this user
-    status_filter = request.args.get('status')
+    status_filter = request.args.get('status', 'all')
+
+    query = """
+        SELECT o.*, o.decline_reason
+        FROM orders o
+        WHERE o.user_id = %s
+    """
+    params = [uid]
 
     if status_filter != 'all':
-        query = "SELECT * FROM orders WHERE user_id = %s AND status = %s ORDER BY created_at DESC"
-        params = (uid, status_filter)
-    else:
-        query = "SELECT * FROM orders WHERE user_id = %s ORDER BY created_at DESC"
-        params = (uid,)
+        # Match exact status (case-sensitive now)
+        query += " AND o.status = %s"
+        params.append(status_filter)
 
-    orders = db.query_all(query, params)
+    query += " ORDER BY o.created_at DESC"
+    orders = db.query_all(query, tuple(params))
 
-    # 2. For each order, fetch its items
+    from datetime import datetime
     for order in orders:
+        # Format date
+        if order['created_at']:
+            if isinstance(order['created_at'], str):
+                try:
+                    dt = datetime.strptime(order['created_at'][:19], '%Y-%m-%d %H:%M:%S')
+                except:
+                    dt = datetime.strptime(order['created_at'][:10], '%Y-%m-%d')
+            else:
+                dt = order['created_at']
+            order['formatted_date'] = dt.strftime('%B %d, %Y')
+        else:
+            order['formatted_date'] = 'Unknown'
+
+        # Fetch order items
         order['products_list'] = db.query_all("""
-            SELECT oi.*, p.name, p.image 
+            SELECT oi.quantity, oi.price, p.name, p.image
             FROM order_items oi
             JOIN products p ON oi.product_id = p.id
             WHERE oi.order_id = %s
         """, (order['id'],))
-        
-        order['extra_items'] = len(order['products_list']) - 1
+
+        order['extra_items'] = max(0, len(order['products_list']) - 1)
+
+        # Ensure decline_reason is available
+        if order.get('decline_reason') is None:
+            order['decline_reason'] = None
 
     return render_template('user/orders.html', orders=orders)
