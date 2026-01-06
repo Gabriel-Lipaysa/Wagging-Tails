@@ -1,60 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <title>Admin | Wagging Wonders</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Wagging Wonders</title>
+
+    <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f6f6f6;
+            background-color: #f5f6f8;
+            margin: 0;
+        }
+
+        /* ===== LAYOUT ===== */
+        .admin-wrapper {
+            display: flex;
             min-height: 100vh;
         }
 
-        /* Updated navbar to match customer site's pastel pink/peach */
-        .navbar {
-            background-color: #FFDAD6 !important;  /* Soft peach/pink from the customer site */
-            border-bottom: 1px solid #f0c0b8;
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e6e6e6;
+            padding: 1.5rem 1rem;
         }
 
-        .navbar-brand,
-        .nav-link {
-            color: #6B705C !important;  /* Dark olive for text to ensure good contrast */
-            font-weight: 500;
-        }
-
-        .navbar-brand:hover,
-        .nav-link:hover {
-            color: #4a503d !important;
-        }
-
-        .logo-text {
-            font-weight: 500;
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
             color: #6B705C;
+            margin-bottom: 2rem;
         }
 
-        .btn-light {
-            background-color: #ffffff;
-            border-color: #CB997E;
+        .sidebar-brand img {
+            height: 36px;
+            background: #fff;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            border-radius: 12px;
             color: #6B705C;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .btn-light:hover {
-            background-color: #CB997E;
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #CB997E;
             color: #ffffff;
         }
 
-        .form-select:focus, 
-        .form-control:focus {
-            border-color: #CB997E !important;
-            border-width: 2px;
-            outline: 0 !important;
-            box-shadow: none !important; 
+        /* ===== MAIN ===== */
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+        }
+
+        /* ===== DASHBOARD WRAPPER ===== */
+        .dashboard-wrapper {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 3rem 3rem 3.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+
+        /* ===== HEADER ===== */
+        .dashboard-title h2 {
+            font-weight: 600;
+        }
+
+        .dashboard-title p {
+            font-size: 0.95rem;
+            color: #8a8a8a;
+        }
+
+        /* ===== CARDS ===== */
+        .dashboard-card {
+            border: none;
+            border-radius: 22px;
+            background: #ffffff;
+        }
+
+        /* ===== STAT CARDS ===== */
+        .stat-card {
+            text-align: center;
+            padding: 2.2rem 1.5rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .stat-card h6 {
+            margin-top: 0.75rem;
+            font-weight: 500;
+            color: #6B705C;
+        }
+
+        .stat-card h3 {
+            font-size: 2.4rem;
+            font-weight: 600;
+            margin: 0.25rem 0;
+        }
+
+        .stat-card small {
+            color: #9a9a9a;
+        }
+
+        /* Icon */
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.6rem;
+            font-size: 1.9rem;
+        }
+
+        .bg-soft-primary {
+            background: rgba(54, 99, 255, 0.15);
+            color: #3663ff;
+        }
+
+        .bg-soft-success {
+            background: rgba(45, 143, 95, 0.15);
+            color: #2d8f5f;
+        }
+
+        .bg-soft-warning {
+            background: rgba(255, 193, 7, 0.18);
+            color: #f4b400;
+        }
+
+        .bg-soft-info {
+            background: rgba(0, 174, 239, 0.18);
+            color: #00aee7;
+        }
+
+        /* ===== ACTION CARDS ===== */
+        .action-card {
+            padding: 2.6rem 2.2rem;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .action-card h5 {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-card p {
+            color: #6f6f6f;
+            font-size: 0.95rem;
         }
 
         .btn-primary {
@@ -63,9 +182,8 @@
         }
 
         .btn-primary:hover {
-            background-color: #6B705C;
-            border-color: #6B705C;
-            color: #fff;
+            background-color: #b4836a;
+            border-color: #b4836a;
         }
 
         .btn-success {
@@ -74,141 +192,58 @@
         }
 
         .btn-success:hover {
-            background-color: #8B9A46;
-            border-color: #8B9A46;
+            background-color: #8f9c88;
+            border-color: #8f9c88;
         }
-
-        /* Centered Admin Panel Container */
-        .admin-container {
-            max-width: 1100px;
-            margin: 2rem auto;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-            padding: 2.5rem;
-        }
-
-        @media (max-width: 1200px) {
-            .admin-container {
-                margin: 1.5rem 1rem;
-                padding: 2rem;
-                border-radius: 16px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .admin-container {
-                margin: 1rem 0.5rem;
-                padding: 1.5rem;
-                border-radius: 12px;
-            }
-        }
-
-        .table th {
-            background-color: #6B705C;
-            color: #fcfcfc;
-            font-weight: 500;
-            font-size: 0.95rem;
-            text-align: center;
-        }
-
-        .table td {
-            vertical-align: middle;
-            font-size: 0.92rem;
-        }
-
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .dashboard-card {
-            text-align: center;
-            padding: 1.5rem;
-        }
-
-        .dashboard-card h5 {
-            margin-top: 1rem;
-            color: #4a4a4a;
-        }
-
-        .dashboard-card h3 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            margin: 0.5rem 0;
-        }
-
-        .dashboard-card small {
-            color: #888;
-        }
-
-        .alert-success {
-            background-color: #d6eadf;
-            border-color: #c2dfcc;
-            color: #3a6f4d;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffeaa7;
-            color: #856404;
-        }
-
-        .badge.bg-success {
-            background-color: #A8B5A0 !important;
-        }
-
-        .badge.bg-danger {
-            background-color: #D4A574 !important;
-        }
-        
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-lg px-4">
-        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('admin.dashboard') }}">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Wagging Wonders Logo"
-                style="background-color: white; padding: 5px; border-radius: 8px;" height="40">
-            <span class="logo-text ms-2">Wagging Wonders Admin</span>
-        </a>
-        <div class="ms-auto">
-            <a href="{{ url_for('admin.logout') }}" class="btn btn-light">Logout</a>
-        </div>
-    </nav>
+<div class="admin-wrapper">
+    {% set current = request.endpoint %}
 
-    <!-- Centered Admin Panel -->
-    <div class="admin-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+    <div class="sidebar-brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}">
+        Wagging Wonders
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-</body>
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="{% if current == 'admin.dashboard' %}active{% endif %}">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
 
+    <a href="{{ url_for('admin.show_products') }}"
+       class="{% if current == 'admin.show_products' %}active{% endif %}">
+        <i class="fas fa-box"></i> Products
+    </a>
+
+    <a href="{{ url_for('admin.show_users') }}"
+       class="{% if current == 'admin.show_users' %}active{% endif %}">
+        <i class="fas fa-users"></i> Users
+    </a>
+
+    <a href="{{ url_for('admin.show_orders') }}"
+       class="{% if current == 'admin.show_orders' %}active{% endif %}">
+        <i class="fas fa-shopping-cart"></i> Orders
+    </a>
+
+    <a href="{{ url_for('admin.logout') }}">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+</aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="dashboard-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

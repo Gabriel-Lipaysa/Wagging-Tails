@@ -397,19 +397,41 @@ def show_orders():
 
     return render_template('admin/orders/index.html', orders=orders)
 
-@admin.route('/admin/orders/<int:id>/approve', methods=['POST'])
-def approve_order(id):
+
+# REMOVED: approve_order route completely
+
+
+@admin.route('/admin/orders/<int:id>/update-status', methods=['POST'])
+def update_order_status(id):
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
     if check:
         return check
     
+    new_status = request.form.get('status')
+    valid_statuses = ['Shipped', 'On Delivery', 'Delivered']
+    
+    if new_status not in valid_statuses:
+        flash('Invalid status selected.', 'danger')
+        return redirect(url_for('admin.show_orders'))
+    
     try:
-        db.execute("UPDATE orders SET status='Shipped', updated_at=NOW() WHERE id=%s", (id,))
-        flash('Order approved and marked as Shipped!', 'success')
+        db.execute(
+            "UPDATE orders SET status=%s, updated_at=NOW() WHERE id=%s",
+            (new_status, id)
+        )
+        
+        flash(f'Order #{id} status updated to "{new_status}"', 'success')
+        
+        db.execute("""
+            INSERT INTO admin_logs (admin_id, action, details, created_at) 
+            VALUES (%s, 'update_order_status', %s, NOW())
+        """, (session['user_id'], f'Order #{id} → {new_status}'))
+        
     except Exception as e:
-        flash(f'Error approving order: {str(e)}', 'danger')
+        flash(f'Error updating order status: {str(e)}', 'danger')
     
     return redirect(url_for('admin.show_orders'))
+
 
 @admin.route('/admin/orders/<int:id>/decline', methods=['POST'])
 def decline_order(id):
@@ -428,7 +450,14 @@ def decline_order(id):
             SET status='Declined', updated_at=NOW(), decline_reason=%s 
             WHERE id=%s
         """, (reason, id))
+        
         flash('Order declined successfully.', 'success')
+        
+        db.execute("""
+            INSERT INTO admin_logs (admin_id, action, details, created_at) 
+            VALUES (%s, 'decline_order', %s, NOW())
+        """, (session['user_id'], f'Order #{id} declined: {reason}'))
+        
     except Exception as e:
         flash(f'Error declining order: {str(e)}', 'danger')
     

@@ -1,66 +1,95 @@
 {% extends 'layout/admin.html' %}
 
 {% block content %}
-    <h2 class="mb-4 text-center">Welcome, {{ session['username'] }} 🐾</h2>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-3 col-sm-6">
-            <div class="card dashboard-card">
-                <i class="fas fa-paw fa-3x text-primary"></i>
-                <h5>Total Products</h5>
-                <h3 class="text-primary">{{ total_products or 0 }}</h3>
-                <small>Active products available</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card dashboard-card">
-                <i class="fas fa-users fa-3x text-success"></i>
-                <h5>Total Customers</h5>
-                <h3 class="text-success">{{ total_users or 0 }}</h3>
-                <small>Active customer accounts</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card dashboard-card">
-                <i class="fas fa-user-slash fa-3x text-warning"></i>
-                <h5>Inactive Users</h5>
-                <h3 class="text-warning">{{ inactive_users or 0 }}</h3>
-                <small>Suspended accounts</small>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-    <div class="card dashboard-card">
-        <i class="fas fa-shopping-cart fa-3x text-info"></i>
-        <h5>Orders</h5>
-        <h3 class="text-info">{{ pending_orders or 0 }}</h3>
-        <small>Pending orders</small>
-    </div>
+<!-- HEADER -->
+<div class="dashboard-title text-center mb-5">
+    <h2>Welcome, {{ session['username'] }} 🐾</h2>
+    <p>Here’s a quick overview of your store today</p>
 </div>
+
+<!-- STATS -->
+<div class="row g-4 mb-5">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card stat-card">
+            <div class="icon-circle bg-soft-primary">
+                <i class="fas fa-paw"></i>
+            </div>
+            <h6>Total Products</h6>
+            <h3>{{ total_products or 0 }}</h3>
+            <small>Active products available</small>
+        </div>
     </div>
 
-    <!-- Action Cards -->
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card dashboard-card h-100 d-flex flex-column">
-                <h5>Manage Products</h5>
-                <p class="flex-grow-1">Add, update, or delete items for dogs and cats.</p>
-                <a href="{{ url_for('admin.show_products') }}" class="btn btn-primary mt-auto">Go to Products</a>
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card stat-card">
+            <div class="icon-circle bg-soft-success">
+                <i class="fas fa-users"></i>
             </div>
+            <h6>Total Customers</h6>
+            <h3>{{ total_users or 0 }}</h3>
+            <small>Active customer accounts</small>
         </div>
-        <div class="col-md-4">
-            <div class="card dashboard-card h-100 d-flex flex-column">
-                <h5>Manage Customers</h5>
-                <p class="flex-grow-1">View customer accounts, reset passwords, and manage account status.</p>
-                <a href="{{ url_for('admin.show_users') }}" class="btn btn-success mt-auto">Manage Customers</a>
-            </div>
-        </div>
-        <div class="col-md-4">
-    <div class="card dashboard-card h-100 d-flex flex-column">
-        <h5>View Orders</h5>
-        <p class="flex-grow-1">Check customer orders, approve/decline, and manage status.</p>
-        <a href="{{ url_for('admin.show_orders') }}" class="btn btn-primary mt-auto">Manage Orders</a>
     </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card stat-card">
+            <div class="icon-circle bg-soft-warning">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <h6>Inactive Users</h6>
+            <h3>{{ inactive_users or 0 }}</h3>
+            <small>Suspended accounts</small>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card stat-card">
+            <div class="icon-circle bg-soft-info">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h6>Orders</h6>
+            <h3>{{ pending_orders or 0 }}</h3>
+            <small>Pending orders</small>
+        </div>
+    </div>
+
 </div>
+
+<!-- ACTIONS -->
+<div class="row g-4">
+
+    <div class="col-lg-4">
+        <div class="dashboard-card action-card h-100">
+            <h5>Manage Products</h5>
+            <p>Add, update, or delete items for dogs and cats.</p>
+            <a href="{{ url_for('admin.show_products') }}" class="btn btn-primary mt-auto">
+                Go to Products
+            </a>
+        </div>
     </div>
+
+    <div class="col-lg-4">
+        <div class="dashboard-card action-card h-100">
+            <h5>Manage Customers</h5>
+            <p>View customer accounts, reset passwords, and manage account status.</p>
+            <a href="{{ url_for('admin.show_users') }}" class="btn btn-success mt-auto">
+                Manage Customers
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dashboard-card action-card h-100">
+            <h5>View Orders</h5>
+            <p>Check customer orders, approve/decline, and manage status.</p>
+            <a href="{{ url_for('admin.show_orders') }}" class="btn btn-primary mt-auto">
+                Manage Orders
+            </a>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}
