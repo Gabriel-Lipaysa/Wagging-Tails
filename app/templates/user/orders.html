@@ -7,20 +7,30 @@
                 <h2 class="fw-bold mb-1" style="color: #5A604D;">Order History</h2>
             </div>
 
+            <!-- Filter Tabs -->
             <div class="d-flex flex-row justify-content-between">
-                <div class="d-flex gap-2 mb-4">
+                <div class="d-flex gap-2 mb-4 flex-wrap">
                     {% set current_status = request.args.get('status', 'all') %}
-                    {% for status in ['all', 'Pending', 'Shipped', 'Delivered', 'Declined'] %}
-                    <a href="{{ url_for('user.order_history', status=status) }}" 
-                       class="btn btn-sm px-4 btn-filter {% if current_status == status %}active{% endif %}">
-                        {{ status | capitalize }}
+                    {% set filters = [
+                        ('all', 'All'),
+                        ('Pending', 'Pending'),
+                        ('Shipped', 'Shipped'),
+                        ('On Delivery', 'On Delivery'),
+                        ('Delivered', 'Delivered'),
+                        ('Declined', 'Declined')
+                    ] %}
+                    {% for value, label in filters %}
+                    <a href="{{ url_for('user.order_history', status=(value if value != 'all' else None)) }}"
+                       class="btn btn-sm px-4 btn-filter 
+                              {% if current_status == value or (current_status == 'all' and value == 'all') %}active{% endif %}">
+                        {{ label }}
                     </a>
                     {% endfor %}
                 </div>
-                <p class="text-muted">{{ orders|length }} total orders</p>
+                <p class="text-muted">{{ orders|length }} total order{{ 's' if orders|length != 1 else '' }}</p>
             </div>
-            
 
+            <!-- Desktop Header -->
             <div class="row px-4 mb-2 d-none d-md-flex text-muted small fw-bold text-uppercase" style="letter-spacing: 1px;">
                 <div class="col-md-2">Order ID</div>
                 <div class="col-md-2">Date</div>
@@ -29,6 +39,7 @@
                 <div class="col-md-2 text-end">Total</div>
             </div>
 
+            <!-- Orders List -->
             {% for order in orders %}
             <div class="card border-0 shadow-sm mb-3 order-row-card" style="border-radius: 12px;">
                 <div class="card-body p-0">
@@ -62,10 +73,12 @@
 
                         <div class="col-6 col-md-3 mt-3 mt-md-0 text-md-center">
                             <span class="badge rounded-pill px-3 py-2" 
+                                  data-order-id="{{ order.id }}"
                                   style="font-size: 0.7rem; 
                                          background-color: 
                                          {% if order.status == 'Pending' %}#CB997E
                                          {% elif order.status == 'Shipped' %}#6a705d
+                                         {% elif order.status == 'On Delivery' %}#A8DADC
                                          {% elif order.status == 'Delivered' %}#d4edda
                                          {% elif order.status == 'Declined' %}#f8d7da
                                          {% else %}#5A604D{% endif %};">
@@ -73,7 +86,7 @@
                             </span>
 
                             {% if order.status == 'Declined' and order.decline_reason %}
-                            <div class="mt-2 small text-danger fw-medium">
+                            <div class="mt-2 small text-danger fw-medium decline-reason">
                                 Reason: {{ order.decline_reason }}
                             </div>
                             {% endif %}
@@ -89,8 +102,9 @@
                         </div>
                     </div>
 
+                    <!-- Collapsible Details -->
                     <div class="collapse" id="details-{{ order.id }}">
-                        <div class=" pb-4 pt-2 border-top bg-light-subtle">
+                        <div class="pb-4 pt-2 border-top bg-light-subtle px-4">
                             <div class="row g-4">
                                 <div class="col-md-4">
                                     <p class="small fw-bold text-muted mb-1">SHIPPING TO</p>
@@ -100,7 +114,8 @@
                                     <p class="small fw-bold text-muted mb-1">PAYMENT</p>
                                     <p class="small mb-0 text-uppercase fw-bold text-dark">{{ order.payment_method|upper }}</p>
                                     {% if order.payment_screenshot != 'none' %}
-                                    <a href="{{ url_for('static', filename=order.payment_screenshot) }}" target="_blank" class="btn btn-sm px-4 btn-filter mt-2 py-1 px-3" style="font-size: 0.7rem;">
+                                    <a href="{{ url_for('static', filename=order.payment_screenshot) }}" target="_blank"
+                                       class="btn btn-sm px-4 btn-filter mt-2 py-1 px-3" style="font-size: 0.7rem;">
                                         <i class="bi bi-paperclip"></i> View Attachment
                                     </a>
                                     {% endif %}
@@ -111,9 +126,7 @@
                                         {% for item in order.products_list %}
                                         <div class="d-flex justify-content-between align-items-start py-2 {% if not loop.last %}border-bottom border-light{% endif %}" style="font-size: 0.75rem;">
                                             <div class="pe-3" style="flex: 1; min-width: 0;">
-                                                <span class="text-dark fw-medium d-block mb-1" style="line-height: 1.2; word-wrap: break-word;">
-                                                    {{ item.name }}
-                                                </span>
+                                                <span class="text-dark fw-medium d-block mb-1" style="line-height: 1.2;">{{ item.name }}</span>
                                                 <span class="text-muted small">Qty: {{ item.quantity }}</span>
                                             </div>
                                             <div class="text-end" style="min-width: 80px;">
@@ -138,4 +151,64 @@
         </div>
     </div>
 </div>
+
+<!-- Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="statusToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastBody">Order status updated!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Updates Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (!('EventSource' in window)) return;
+
+    const source = new EventSource("{{ url_for('user.order_stream') }}");
+
+    source.onmessage = function (event) {
+        const order = JSON.parse(event.data);
+        const badge = document.querySelector(`.badge[data-order-id="${order.id}"]`);
+        if (!badge) return;
+
+        badge.textContent = order.status;
+
+        const colors = {
+            'Pending': '#CB997E',
+            'Shipped': '#6a705d',
+            'On Delivery': '#A8DADC',
+            'Delivered': '#d4edda',
+            'Declined': '#f8d7da'
+        };
+        badge.style.backgroundColor = colors[order.status] || '#5A604D';
+
+        let reasonDiv = badge.parentNode.querySelector('.decline-reason');
+        if (order.status === 'Declined' && order.decline_reason) {
+            if (!reasonDiv) {
+                reasonDiv = document.createElement('div');
+                reasonDiv.className = 'mt-2 small text-danger fw-medium decline-reason';
+                badge.parentNode.appendChild(reasonDiv);
+            }
+            reasonDiv.textContent = 'Reason: ' + order.decline_reason;
+        } else if (reasonDiv) {
+            reasonDiv.remove();
+        }
+
+        if (order.status !== 'Pending') {
+            document.getElementById('toastBody').textContent = 
+                `Order #${order.id} is now ${order.status}!` +
+                (order.status === 'Declined' ? ' Reason: ' + (order.decline_reason || 'N/A') : '');
+            new bootstrap.Toast(document.getElementById('statusToast')).show();
+        }
+    };
+
+    source.onerror = function () {
+        console.error("SSE error");
+    };
+});
+</script>
+
 {% endblock %}

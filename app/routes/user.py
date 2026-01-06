@@ -1,5 +1,7 @@
 import os
 import json
+import time
+from flask import Response
 from flask import render_template, session, redirect, flash, url_for, request, Blueprint, jsonify, current_app
 from app import db
 from app.utils.save_upload import save_upload
@@ -545,3 +547,37 @@ def order_history():
             order['decline_reason'] = None
 
     return render_template('user/orders.html', orders=orders)
+
+@user.route('/orders/stream')
+def order_stream():
+    uid = session.get('user_id')
+    if not uid:
+        return "", 404
+
+    def event_stream():
+        last_seen = {}
+        while True:
+            orders = db.query_all("""
+                SELECT id, status, decline_reason, total_price, created_at 
+                FROM orders 
+                WHERE user_id = %s 
+                ORDER BY created_at DESC
+            """, (uid,))
+
+            for order in orders:
+                key = order['id']
+                current = (order['status'], order['decline_reason'] or '')
+                if last_seen.get(key) != current:
+                    data = {
+                        'id': order['id'],
+                        'status': order['status'],
+                        'decline_reason': order['decline_reason'],
+                        'total_price': float(order['total_price']),
+                        'created_at': order['created_at'].strftime('%B %d, %Y') if order['created_at'] else ''
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+                    last_seen[key] = current
+
+            time.sleep(3)
+
+    return Response(event_stream(), mimetype="text/event-stream")

@@ -3,9 +3,6 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0" style="color: #6B705C;">Order Management</h2>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-        ← Back to Dashboard
-    </a>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -19,9 +16,9 @@
     {% endif %}
 {% endwith %}
 
-<!-- Active Orders -->
+<!-- 1. Pending Orders -->
 <div class="mb-5">
-    <h4 class="mb-3 text-muted fw-semibold border-bottom pb-2">Active Orders</h4>
+    <h4 class="mb-3 text-muted fw-semibold border-bottom pb-2">Pending Orders</h4>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead class="table-light text-center">
@@ -31,75 +28,139 @@
                     <th>Total Price (₱)</th>
                     <th>Status</th>
                     <th>Created At</th>
-                    <th style="width: 200px;">Actions</th>
+                    <th style="width: 320px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for order in orders if order.status|lower in ['pending', 'processing'] %}
-                <tr>
-                    <td class="fw-semibold text-center">#{{ order.id }}</td>
-                    <td>{{ order.customer_name }}</td>
-                    <td class="text-center">₱{{ "%.2f"|format(order.total_price|float) }}</td>
-                    <td class="text-center">
-                        <span class="badge bg-warning text-dark">{{ order.status|capitalize }}</span>
-                    </td>
-                    <td class="text-center text-muted">{{ order.formatted_date }}</td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <!-- View Details -->
-                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}" title="View Details">
-                                <i class="bi bi-eye"></i>
-                            </button>
-
-                            <!-- Approve: Green Check -->
-                            <form action="{{ url_for('admin.approve_order', id=order.id) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-success" title="Approve & Ship">
-                                    <i class="bi bi-check-circle-fill"></i>
+                {% set pending_orders = orders | selectattr('status', 'equalto', 'Pending') | list %}
+                {% if pending_orders %}
+                    {% for order in pending_orders %}
+                    <tr>
+                        <td class="fw-semibold text-center">#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td class="text-center">₱{{ "%.2f"|format(order.total_price|float) }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-warning text-dark">{{ order.status }}</span>
+                        </td>
+                        <td class="text-center text-muted">{{ order.formatted_date }}</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                                    <i class="bi bi-eye"></i>
                                 </button>
-                            </form>
 
-                            <!-- Decline: Red X -->
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ order.id }}" title="Decline">
-                                <i class="bi bi-x-circle-fill"></i>
-                            </button>
-                        </div>
+                                <form action="{{ url_for('admin.update_order_status', id=order.id) }}" method="POST" class="d-inline mb-0">
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="Pending" selected>Pending</option>
+                                        <option value="Shipped">Shipped</option>
+                                        <option value="On Delivery">On Delivery</option>
+                                        <option value="Delivered">Delivered</option>
+                                    </select>
+                                </form>
 
-                        <!-- Decline Modal -->
-                        <div class="modal fade" id="declineModal{{ order.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form method="POST" action="{{ url_for('admin.decline_order', id=order.id) }}">
-                                        <div class="modal-header border-0">
-                                            <h5 class="modal-title">Decline Order #{{ order.id }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <label class="form-label">Reason for declining (visible to customer):</label>
-                                            <textarea name="decline_reason" class="form-control" rows="4" required placeholder="e.g., Item out of stock"></textarea>
-                                        </div>
-                                        <div class="modal-footer border-0">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-danger">Decline Order</button>
-                                        </div>
-                                    </form>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ order.id }}">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+
+                            <!-- Decline Modal -->
+                            <div class="modal fade" id="declineModal{{ order.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="POST" action="{{ url_for('admin.decline_order', id=order.id) }}">
+                                            <div class="modal-header border-0">
+                                                <h5 class="modal-title">Decline Order #{{ order.id }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <label class="form-label">Reason for declining (visible to customer):</label>
+                                                <textarea name="decline_reason" class="form-control" rows="4" required placeholder="e.g., Payment not verified, out of stock"></textarea>
+                                            </div>
+                                            <div class="modal-footer border-0">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-danger">Decline Order</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% else %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-5">No active orders at this time.</td>
-                </tr>
-                {% endfor %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">No pending orders at this time.</td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Processed Orders -->
+<!-- 2. In Progress Orders (Shipped & On Delivery) -->
 <div class="mb-5">
-    <h4 class="mb-3 text-muted fw-semibold border-bottom pb-2">Processed Orders</h4>
+    <h4 class="mb-3 text-muted fw-semibold border-bottom pb-2">In Progress Orders</h4>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light text-center">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Total Price (₱)</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th style="width: 280px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set in_progress = orders | selectattr('status', 'in', ['Shipped', 'On Delivery']) | list %}
+                {% if in_progress %}
+                    {% for order in in_progress %}
+                    <tr>
+                        <td class="fw-semibold text-center">#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td class="text-center">₱{{ "%.2f"|format(order.total_price|float) }}</td>
+                        <td class="text-center">
+                            <span class="badge 
+                                {% if order.status == 'Shipped' %}bg-primary
+                                {% elif order.status == 'On Delivery' %}bg-info text-dark
+                                {% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td class="text-center text-muted">{{ order.formatted_date }}</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+
+                                <!-- Dropdown kept for In Progress orders -->
+                                <form action="{{ url_for('admin.update_order_status', id=order.id) }}" method="POST" class="d-inline mb-0">
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                        <option value="On Delivery" {% if order.status == 'On Delivery' %}selected{% endif %}>On Delivery</option>
+                                        <option value="Delivered">Delivered</option>
+                                    </select>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">No orders in progress.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 3. Completed & Declined Orders -->
+<div class="mb-5">
+    <h4 class="mb-3 text-muted fw-semibold border-bottom pb-2">Completed & Declined Orders</h4>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead class="table-light text-center">
@@ -113,31 +174,37 @@
                 </tr>
             </thead>
             <tbody>
-                {% for order in orders if order.status|lower in ['shipped', 'declined'] %}
-                <tr class="{% if order.status|lower == 'declined' %}table-danger{% else %}table-success{% endif %}">
-                    <td class="fw-semibold text-center">#{{ order.id }}</td>
-                    <td>{{ order.customer_name }}</td>
-                    <td class="text-center">₱{{ "%.2f"|format(order.total_price|float) }}</td>
-                    <td class="text-center">
-                        <span class="badge {% if order.status|lower == 'declined' %}bg-danger{% else %}bg-success{% endif %}">
-                            {{ order.status|capitalize }}
-                        </span>
-                        {% if order.decline_reason %}
-                            <br><small class="text-danger mt-1 d-block">{{ order.decline_reason }}</small>
-                        {% endif %}
-                    </td>
-                    <td class="text-center text-muted">{{ order.formatted_date }}</td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}" title="View Details">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </td>
-                </tr>
+                {% set final_orders = orders | selectattr('status', 'in', ['Delivered', 'Declined']) | list %}
+                {% if final_orders %}
+                    {% for order in final_orders %}
+                    <tr class="{% if order.status == 'Declined' %}table-danger{% elif order.status == 'Delivered' %}table-success{% endif %}">
+                        <td class="fw-semibold text-center">#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td class="text-center">₱{{ "%.2f"|format(order.total_price|float) }}</td>
+                        <td class="text-center">
+                            <span class="badge 
+                                {% if order.status == 'Delivered' %}bg-success
+                                {% elif order.status == 'Declined' %}bg-danger
+                                {% endif %}">
+                                {{ order.status }}
+                            </span>
+                            {% if order.decline_reason %}
+                                <br><small class="text-danger mt-1 d-block">{{ order.decline_reason }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center text-muted">{{ order.formatted_date }}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% else %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-5">No processed orders yet.</td>
-                </tr>
-                {% endfor %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">No completed or declined orders.</td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
@@ -157,8 +224,14 @@
                 <p><strong>Total:</strong> ₱{{ "%.2f"|format(order.total_price|float) }}</p>
                 <p><strong>Payment Method:</strong> {{ order.payment_method|capitalize }}</p>
                 <p><strong>Status:</strong> 
-                    <span class="badge {% if order.status|lower == 'declined' %}bg-danger{% elif order.status|lower == 'shipped' %}bg-success{% else %}bg-warning{% endif %}">
-                        {{ order.status|capitalize }}
+                    <span class="badge 
+                        {% if order.status == 'Pending' %}bg-warning text-dark
+                        {% elif order.status == 'Declined' %}bg-danger
+                        {% elif order.status == 'Shipped' %}bg-primary
+                        {% elif order.status == 'On Delivery' %}bg-info text-dark
+                        {% elif order.status == 'Delivered' %}bg-success
+                        {% endif %}">
+                        {{ order.status }}
                     </span>
                 </p>
                 {% if order.decline_reason %}
