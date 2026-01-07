@@ -239,16 +239,14 @@ a{
     color:white
 }
 
-/* Custom Active Filter Color */
 #orderFilters .nav-link.active {
-    background-color: #6a705d; /* Your Navbar Green */
+    background-color: #6a705d; 
 }
 
 #orderFilters .nav-link {
     color: #6a705d;
 }
 
-/* Tracking Step Highlight */
 .step-active {
     background-color: #CB997E !important;
     border-color: #CB997E !important;
@@ -262,17 +260,14 @@ a{
     color: #CB997E !important;
 }
 
-/* Custom horizontal line in the tracker */
 .stepper-wrapper {
     margin-bottom: 2rem;
 }
 
-/* Product list styling inside cards */
 .uppercase {
     text-transform: uppercase;
 }
 
-/* Button link focus remove */
 .btn-link:focus {
     box-shadow: none;
 }
@@ -286,7 +281,6 @@ a{
     text-transform: uppercase;
 }
 
-/* Brand Filter Buttons */
 .btn-filter {
     border-radius: 8px;
     font-size: 0.85rem;
@@ -305,7 +299,6 @@ a{
     box-shadow: 0 4px 6px rgba(203, 153, 126, 0.2);
 }
 
-/* Row Hover Effect */
 .order-row-card:hover {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
 }

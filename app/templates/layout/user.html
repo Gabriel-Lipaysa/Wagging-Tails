@@ -21,10 +21,11 @@
         </a>
 
 
-        <form class="d-flex flex-grow-1 justify-content-center ">
+        <form class="d-flex flex-grow-1 justify-content-center" action="{{ url_for('user.search') }}" method="GET">
             <div class="input-group" style="max-width: 600px; width: 100%;">
                 <span class="input-group-text"><i class="bi-search"></i></span>
-                <input type="search" name="" id="" class="form-control text-start" placeholder="Search" >
+                <input type="search" name="q" class="form-control text-start" placeholder="Search products...">
+                <button type="submit" class="btn btn-filter">Search</button>
             </div>
         </form>
         
@@ -52,21 +53,18 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ session.get('name') or 'User' }}
+                            {{ session.get('name')}}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('user.order_history', status='all') }}">My Orders</a></li>
-                            <li><a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#reviewsSidebar">My Reviews</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('user.user_logout') }}">Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('user.user_logout') }}"><i class="bi bi-box-arrow-in-right"></i> Logout</a></li>
                         </ul>
                     </li>
                 
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="/">
-                        <i class="bi bi-box-arrow-in-right"></i> Login
-                    </a>
+                    <a class="nav-link" href="/login/user">Login</a>
                 </li>
                 {% endif %}
             </ul>
@@ -128,74 +126,6 @@
             </div>
         </div>
     </div>
-
-
-    <!-- Order Confirmation Modal -->
-    <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 1rem; background-color: #f6f6f6;">
-                <div class="modal-header"
-                    style="background-color: #6a705d; color: white; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                    <h5 class="modal-title" id="orderModalLabel">🧾 Order Confirmation</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h5 class="mb-3" style="color: #5A604D; font-weight: bold;">Items to be purchased:</h5>
-                    <div id="order-details"
-                        style="background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <!-- Order items will be dynamically filled here -->
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <p class="mb-0" style="font-size: 1.25rem; color: #333;"><strong>Total Amount:</strong></p>
-                        <p class="mb-0" style="font-size: 1.5rem; color: #CB997E;"><strong>₱<span
-                                    id="total-price">0</span></strong></p>
-                    </div>
-                    <p class="mt-2" style="color: #6a705d;"><strong>Payment Method:</strong> Cash on Delivery</p>
-                </div>
-                <div class="modal-footer"
-                    style="background-color: #FCFCFC; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
-                    <button type="button" class="btn btn-outline-secondary px-4 py-2" data-bs-dismiss="modal"
-                        style="border-radius: 0.5rem;">Cancel</button>
-                    <button type="button" class="btn px-4 py-2" id="confirmOrder"
-                        style="background-color: #CB997E; color: white; border-radius: 0.5rem;">Place Order</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="ordersSidebar" aria-labelledby="ordersSidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="ordersSidebarLabel">My Orders</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <!-- Order details will be loaded here dynamically -->
-            <div id="my-orders">
-                <!-- Ongoing and completed orders -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Reviews Sidebar -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="reviewsSidebar" aria-labelledby="reviewsSidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="reviewsSidebarLabel">My Reviews</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div id="my-reviews">
-                <!-- Reviews will be loaded here dynamically -->
-            </div>
-        </div>
-    </div>
-
-
 
     <main class="">
         {% block content %}{% endblock %}
@@ -302,16 +232,14 @@
                 icon.classList.add(newIconClass);
             });
 
-            // 3. Check if the Wishlist Sidebar is currently open
             const wishlistSidebar = document.getElementById('wishlistSidebar');
             if (wishlistSidebar && wishlistSidebar.classList.contains('show')) {
-                // Re-fetch the list so the item disappears from the sidebar immediately
                 loadWishlistItems();
             }
         })
         .catch(err => {
             alert("Please login to manage your wishlist!");
-            window.location.href = "/login";
+            window.location.href = "/login/user";
         });
     };
 
@@ -481,30 +409,6 @@
                 alert("Please select at least one item to checkout.");
             }
         });
-
-        // --- 4. SCROLL TRANSITIONS (Product Detail Page) ---
-        const floatingInfo = document.getElementById('floating-info');
-        const relatedProducts = document.getElementById('related-products');
-
-        if (floatingInfo && relatedProducts) {
-            const observerOptions = { threshold: 0.01 };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        floatingInfo.style.opacity = '0';
-                        floatingInfo.style.transform = 'translateY(-20px)';
-                        floatingInfo.style.pointerEvents = 'none';
-                    } else {
-                        floatingInfo.style.opacity = '1';
-                        floatingInfo.style.transform = 'translateY(0)';
-                        floatingInfo.style.pointerEvents = 'all';
-                    }
-                });
-            }, observerOptions);
-
-            observer.observe(relatedProducts);
-        }
 
         // --- 5. ORDER HISTORY LOGIC ---
         const detailContainers = document.querySelectorAll('.collapse');
