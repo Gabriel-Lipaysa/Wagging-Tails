@@ -1,16 +1,62 @@
 {% extends 'layout/user.html' %}
 {% from "macros/card_macros.html" import product_card %}
 {% block content %}
-    <div class="px-4 text-white h3" style="background-color: #5A604D;">
-        <p class="ps-3 py-4">Home <i class="bi bi-chevron-right"></i> {{current_category.title()}}</p>
+    <div class="px-4 py-3" style="background: linear-gradient(135deg, #6a705d 0%, #5a604d 100%); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <p class="ps-3 mb-0 text-white">Home <i class="bi bi-chevron-right"></i> {{current_category.title()}}</p>
     </div>
-    <div class="dashboard-container">
-        <div class="p-5 d-flex flex-column ">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
-                {% for product in products %}
-                    {{product_card(product)}}
-                {% endfor %}
+    <div class="products-page-container" style="background: linear-gradient(135deg, #6a705d 0%, #5a604d 100%); min-height: 80vh;">
+        <div class="container py-5">
+            <div class="row">
+                <!-- Filters Sidebar -->
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <div class="filters-sidebar">
+                        <h5 class="fw-bold mb-4">Filters</h5>
+                        
+                        <!-- Category Filter -->
+                        <div class="filter-section mb-4">
+                            <h6 class="fw-semibold mb-3">Category</h6>
+                            <div class="filter-options">
+                                <a href="{{ url_for('user.product_listing', category='all') }}" 
+                                   class="filter-option {% if current_category == 'all' or current_category == 'All Products' %}active{% endif %}">
+                                    All Products
+                                </a>
+                                <a href="{{ url_for('user.product_listing', category='Dog Food') }}" 
+                                   class="filter-option {% if current_category == 'Dog Food' %}active{% endif %}">
+                                    Dog Food
+                                </a>
+                                <a href="{{ url_for('user.product_listing', category='Cat Food') }}" 
+                                   class="filter-option {% if current_category == 'Cat Food' %}active{% endif %}">
+                                    Cat Food
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Products Grid -->
+                <div class="col-md-9">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0 text-white">{{current_category.title()}}</h4>
+                        <div class="text-white">{{ products|length }} products</div>
+                    </div>
+                    <div class="row g-3">
+                        {% for product in products %}
+                            <div class="col-md-4 col-sm-6">
+                                {{product_card(product)}}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <script>
+    function filterByPrice(min, max) {
+        // This would need to be implemented with AJAX or form submission
+        // For now, just show an alert
+        alert('Price filter: ₱' + min + ' - ₱' + max);
+    }
+    </script>
 {% endblock %}

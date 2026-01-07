@@ -3,65 +3,98 @@
 
 {% block content %}
 
-<div class="pt-5" style="background-color: #5A604D;">
-</div>
-<div class="dashboard-container">
-    <div class="hero-background" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('{{ url_for('static', filename='images/image2.png') }}');">
-        <div class="container-fluid">
-            <div class="row align-items-start pt-5 ps-4" style="min-height: 100vh;">
-                <div class="col-md-6 ps-5 mb-5 " style="color: white;">
-                    <h1 class="logo-text fw-bold" style="color: white !important; font-size: 4rem;">Wagging Wonders:</h1>
-                    <h1 class="display-6 fw-bold">Where Purrfect Foods Meets Happy Pets!</h1>
-                    <p class="lead mt-3 text-white">
-                        Explore a curated selection of essentials for dogs and cats, all in one place.
-                    </p>
+<!-- Hero Section -->
+<div class="hero-clean position-relative" style="background-image: url('{{ url_for('static', filename='images/image2.png') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative" style="z-index: 2;">
+        <div class="row align-items-center" style="min-height: 75vh;">
+            <div class="col-lg-6 position-relative">
+                <h1 class="hero-title-clean">
+                    TRENDY<br>COLLECTION
+                </h1>
+                <p class="hero-description-clean">
+                    Premium All-Natural Pet Food Tailored for Optimal Health and Happiness. 
+                    Discover the perfect nutrition for your furry friends.
+                </p>
+                <div class="d-flex align-items-center mb-4">
+                    <a href="{{ url_for('user.product_listing', category='all') }}" class="hero-cta-clean btn">
+                        <i class="bi bi-bag me-2"></i>Start Shopping
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    <div class="container-fluid d-flex flex-row justify-content-between align-items-center px-5 py-4" style="background-color: #5A604D;">
-        <div class="p-3 text-white"><h1>Shop by Pets</h1></div>
-        <div class="d-flex flex-row justify-content-around align-items-center me-3">
-            <div class="d-flex flex-column" >
-                <a href="/products" class="d-flex flex-column justify-content-center align-items-center mx-5"> 
-                    <p class="fs-5">All Products ></p>
-                    <img src="{{url_for('static', filename='images/all-food.png')}}" width="75px">
-                </a>
-            </div>                   
+</div>
+
+<!-- Customer Satisfaction & Products Section -->
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #6a705d 0%, #5a604d 100%);">
+    <div class="container">
+        <div class="row align-items-start">
+            <!-- Customer Count Card -->
+            <div class="col-md-3 mb-4 mb-md-0">
+                <div class="customer-card">
+                    <div class="customer-number">100K+</div>
+                    <div class="customer-text">Happy Customer's</div>
+                    <div class="customer-avatars mt-3">
+                        <img src="https://ui-avatars.com/api/?name=Customer+1&background=ffffff&color=CB997E&size=40" 
+                             alt="Customer" class="customer-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Customer+2&background=ffffff&color=6a705d&size=40" 
+                             alt="Customer" class="customer-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Customer+3&background=ffffff&color=CB997E&size=40" 
+                             alt="Customer" class="customer-avatar">
+                        <div class="customer-avatar customer-avatar-more">+</div>
+                    </div>
+                </div>
+            </div>
             
-            <div class="d-flex flex-column" >
-                <a href="/products/Dog Food" class="d-flex flex-column justify-content-center align-items-center mx-5"> 
-                    <p class="fs-5">Dog Food ></p>
-                    <img src="{{url_for('static', filename='images/dog-food.png')}}" width="75px">
-                </a>
-            </div>   
-            <div class="d-flex flex-column" >
-                <a href="/product/Cat Food" class="d-flex flex-column justify-content-center align-items-center mx-5"> 
-                    <p class="fs-5">Cat Food ></p>
-                    <img src="{{url_for('static', filename='images/cat-food.png')}}" width="75px">
-                </a>
-            </div>      
-        </div>
-    </div> 
-    <div class="p-5 d-flex flex-column ">
-        <div class="mb-3 ms-3">
-            <p class="fs-3 fw-bold" style="color: #6a705d;">Top Picks in Dog Food</p>
-        </div>
-        <div class="row g-4 mb-5 mx-1 justify-content-between">
-            {% for product in dog_p %}
-                {{product_card(product)}}
-            {% endfor %}     
-        </div>
-        
-        <div class="mb-3 ms-3">
-            <p class="fs-3 fw-bold" style="color: #6a705d;">Top Picks in Cat Food</p>
-        </div>
-        
-        <div class="row g-4 mb-5 mx-1 justify-content-between">
-            {% for product in cat_p %}
-                {{product_card(product)}}
-            {% endfor %}     
+            <!-- Featured Products -->
+            <div class="col-md-9">
+                <h4 class="text-white fw-bold mb-4">Featured Products</h4>
+                <div class="row g-3">
+                    {% if dog_p %}
+                        {% for product in dog_p[:4] %}
+                            <div class="col-md-3 col-sm-6">
+                                {{product_card(product)}}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Products Section -->
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #6a705d 0%, #5a604d 100%);">
+    <div class="container">
+        <!-- Top Picks in Dog Food -->
+        {% if dog_p %}
+        <div class="mb-5">
+            <h3 class="text-white fw-bold mb-4">
+                <i class="bi bi-star-fill me-2" style="color: #CB997E;"></i>Top Picks in Dog Food
+            </h3>
+            <div class="row g-4">
+                {% for product in dog_p %}
+                    {{product_card(product)}}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Top Picks in Cat Food -->
+        {% if cat_p %}
+        <div class="mb-5">
+            <h3 class="text-white fw-bold mb-4">
+                <i class="bi bi-star-fill me-2" style="color: #CB997E;"></i>Top Picks in Cat Food
+            </h3>
+            <div class="row g-4">
+                {% for product in cat_p %}
+                    {{product_card(product)}}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 {% endblock %}

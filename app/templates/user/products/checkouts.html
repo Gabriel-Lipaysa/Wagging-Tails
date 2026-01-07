@@ -1,169 +1,475 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
-</head>
-<style>
-.form-select:focus, 
-.form-control:focus {
-    border-color: #CB997E !important;
-    border-width: 2px;
-    outline: 0 !important;
-    box-shadow: none !important; 
-}
+{% extends 'layout/user.html' %}
+{% block content %}
 
-.btn-outline-secondary{
-    border-color: #CB997E !important;
-    color: #CB997E !important;
-}
-
-.btn-check:checked + .btn-outline-secondary {
-    background-color: #CB997E !important;
-    border-color: #CB997E !important;
-    color: white !important;
-}
-
-.form-select, 
-.form-control, 
-.btn-outline-secondary {
-    transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-}
-</style>
-<body>
-    <nav class="navbar navbar-expand-lg px-4" style="background-color: #6a705d; z-index: 1030;">
-        <div class="container-fluid">
-            <a class="navbar-brand mx-auto d-flex align-items-center pt-0 pb-1" href="/">
-                <span class="logo-text" style="color: white;">Wagging Wonders</span>
-            </a>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row" style="min-height: calc(100vh - 56px);"> <div class="col-md-7 py-5 px-5">
-                <p class="text-muted">{{ email }}</p>
-                <hr>
-                <form action="{{ url_for('user.process_order') }}" method="POST" enctype="multipart/form-data">
-                    <h5 class="fw-bold mb-3">Delivery Address</h5>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Region</label>
-                            <select id="region" class="form-select" required>
-                                <option value="" selected disabled>Select Region</option>
-                            </select>
-                            <input type="hidden" name="region" id="region_name">
+<div class="checkout-page-modern" style="background: #f5f5f5; min-height: 100vh; padding: 3rem 0;">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb-checkout">
+                <li class="breadcrumb-item-checkout"><a href="{{ url_for('user.home') }}">Cart</a></li>
+                <li class="breadcrumb-item-checkout active">Shipping</li>
+                <li class="breadcrumb-item-checkout">Payment</li>
+            </ol>
+        </nav>
+        
+        <div class="row g-5">
+            <!-- Left Column - Shipping Form -->
+            <div class="col-lg-7">
+                <div class="checkout-form-wrapper">
+                    <h3 class="checkout-section-title mb-4">Shipping Address</h3>
+                    <form id="checkout-form" action="{{ url_for('user.process_order') }}" method="POST" enctype="multipart/form-data">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">First Name*</label>
+                                <input type="text" class="form-control-checkout" name="first_name" value="{{ session.get('name', '').split()[0] if session.get('name') else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">Last Name*</label>
+                                <input type="text" class="form-control-checkout" name="last_name" value="{{ session.get('name', '').split()[-1] if session.get('name') and session.get('name').split()|length > 1 else '' }}" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-checkout">Email*</label>
+                                <input type="email" class="form-control-checkout" name="email" value="{{ email }}" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-checkout">Phone number*</label>
+                                <input type="tel" class="form-control-checkout" name="phone" placeholder="+63 912 345 6789" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-checkout">Region*</label>
+                                <select id="region" class="form-control-checkout" required>
+                                    <option value="" selected disabled>Select Region</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">Province*</label>
+                                <select id="province" class="form-control-checkout" disabled required>
+                                    <option value="" selected disabled>Select Province</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">City / Municipality*</label>
+                                <select id="city" class="form-control-checkout" disabled required>
+                                    <option value="" selected disabled>Select City</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">Barangay*</label>
+                                <select id="barangay" class="form-control-checkout" disabled required>
+                                    <option value="" selected disabled>Select Barangay</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-checkout">Zip Code*</label>
+                                <input type="text" name="postal" class="form-control-checkout" placeholder="1234" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label-checkout">House No. / Street / Subd.*</label>
+                                <input type="text" name="address" class="form-control-checkout" placeholder="123 Example St." required>
+                            </div>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Province</label>
-                            <select id="province" class="form-select" disabled required>
-                                <option value="" selected disabled>Select Province</option>
-                            </select>
-                            <input type="hidden" name="province" id="province_name">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">City / Municipality</label>
-                            <select id="city" class="form-select" disabled required>
-                                <option value="" selected disabled>Select City</option>
-                            </select>
-                            <input type="hidden" name="city" id="city_name">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Barangay</label>
-                            <select id="barangay" class="form-select" disabled required>
-                                <option value="" selected disabled>Select Barangay</option>
-                            </select>
-                            <input type="hidden" name="barangay" id="barangay_name">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Postal Code</label>
-                            <input type="text" name="postal" class="form-control" placeholder="1234" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">House No. / Street / Subd.</label>
-                            <input type="text" name="address" class="form-control" placeholder="123 Example St." required>
-                        </div>
-                    </div>
 
-                    <h5 class="fw-bold mb-3 mt-4">Payment Method</h5>
-                    <div class="w-100 mb-3" role="group">
-                        <input type="radio" class="btn-check" name="payment" id="gcash" value="Gcash" required>
-                        <label class="btn btn-outline-secondary" for="gcash">Gcash</label>
+                        <h3 class="checkout-section-title mb-3 mt-5">Shipping Method</h3>
+                        <div class="shipping-methods-modern mb-4">
+                            <div class="shipping-option-card">
+                                <input type="radio" class="btn-check" name="shipping_method" id="free_shipping" value="free" checked>
+                                <label class="shipping-option-label" for="free_shipping">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                        <div>
+                                            <div class="fw-bold">Free Shipping</div>
+                                            <div class="text-muted small">7-20 Days</div>
+                                        </div>
+                                        <div class="fw-bold">FREE</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
 
-                        <input type="radio" class="btn-check" name="payment" id="maya" value="Maya">
-                        <label class="btn btn-outline-secondary" for="maya">Maya</label>
+                        <h3 class="checkout-section-title mb-3 mt-5">Payment Method</h3>
+                        <div class="payment-methods-modern mb-4">
+                            <div class="form-check-payment">
+                                <input class="form-check-input" type="radio" name="payment" id="cod" value="Cash on Delivery" checked>
+                                <label class="form-check-label-payment" for="cod">
+                                    Cash on Delivery
+                                </label>
+                            </div>
+                            <div class="form-check-payment">
+                                <input class="form-check-input" type="radio" name="payment" id="gcash" value="Gcash">
+                                <label class="form-check-label-payment" for="gcash">
+                                    Gcash
+                                </label>
+                            </div>
+                            <div class="form-check-payment">
+                                <input class="form-check-input" type="radio" name="payment" id="maya" value="Maya">
+                                <label class="form-check-label-payment" for="maya">
+                                    Maya
+                                </label>
+                            </div>
+                        </div>
 
-                        <input type="radio" class="btn-check" name="payment" id="cod" value="COD">
-                        <label class="btn btn-outline-secondary" for="cod">Cash on Delivery</label>
-                    </div>
+                        <div class="mb-4">
+                            <label class="form-label-checkout">Proof of Payment (Required for Gcash/Maya)</label>
+                            <input type="file" name="image" class="form-control-checkout">
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="form-label small text-muted">Proof of Payment (Required for Gcash/Maya)</label>
-                        <input type="file" name="image" class="form-control">
-                    </div>
-
-                    <input type="hidden" name="selected_item_ids" value="{{ request.args.get('items') }}">
-                    
-                    <button type="submit" class="btn w-100 py-3 fw-bold text-white" style="background-color: #CB997E; border-radius: 8px;">
-                        Complete Checkout
-                    </button>
-                </form>
+                        <input type="hidden" name="selected_item_ids" value="{{ request.args.get('items') }}">
+                        <input type="hidden" name="region" id="region_name">
+                        <input type="hidden" name="province" id="province_name">
+                        <input type="hidden" name="city" id="city_name">
+                        <input type="hidden" name="barangay" id="barangay_name">
+                    </form>
+                </div>
             </div>
 
-            <div class="col-md-5 py-5 px-4 d-flex flex-column sticky-top" >
-                <div style="position: sticky; top: 100px; bottom: 120px;">
-                    <div class="p-4 rounded shadow-sm d-flex flex-column" style="background-color: #f8f9fa;">
-                        <h5 class="fw-bold mb-4">Order Summary</h5>
-                        
-                        <div class="flex-grow-1" style="max-height: 50vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
-                            {% for item in products %}
-                            <div class="d-flex align-items-center my-3">
-                                <div class="position-relative">
-                                    <img src="{{ url_for('static', filename=item.image) }}" class="rounded border" style="width: 64px; height: 64px; object-fit: cover;">
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">
-                                        {{ item.quantity }}
-                                    </span>
-                                </div>
-                                <div class="ms-3 flex-grow-1">
-                                    <p class="mb-0 fw-semibold small text-black">{{ item.name }}</p>
-                                </div>
-                                <div class="text-end">
-                                    <p class="mb-0 small text-black">₱{{ "{:,.2f}".format(item.price * item.quantity) }}</p>
-                                </div>
+            <!-- Right Column - Cart Summary -->
+            <div class="col-lg-5">
+                <div class="cart-summary-card">
+                    <h3 class="cart-summary-title mb-4">Your Cart</h3>
+                    
+                    <div class="cart-items-summary">
+                        {% for item in products %}
+                        <div class="cart-item-summary mb-3">
+                            <img src="{{ url_for('static', filename=item.image) }}" 
+                                 class="cart-item-img" 
+                                 alt="{{ item.name }}">
+                            <div class="cart-item-details">
+                                <p class="cart-item-name-summary mb-1">{{ item.name }}</p>
+                                <p class="cart-item-category-summary mb-0">{{ item.category }}</p>
                             </div>
-                            {% endfor %}
+                            <div class="cart-item-price-summary">₱{{ "{:,.2f}".format(item.price * item.quantity) }}</div>
                         </div>
-
-                        <div class="mt-auto">
-                            <hr>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal</span>
-                                <span>₱{{ "{:,.2f}".format(total) }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Shipping</span>
-                                <span class="text-success">FREE</span>
-                            </div>
-                            <div class="d-flex justify-content-between mt-3 h5 fw-bold">
-                                <span>Total</span>
-                                <span style="color: #CB997E;">₱{{ "{:,.2f}".format(total) }}</span>
-                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="discount-section-summary mb-4">
+                        <div class="input-group-discount">
+                            <input type="text" class="form-control-discount" placeholder="Discount code">
+                            <button class="btn-discount-apply" type="button">Apply</button>
                         </div>
                     </div>
+                    
+                    <div class="order-summary-checkout">
+                        <div class="summary-row-checkout">
+                            <span>Subtotal</span>
+                            <span>₱{{ "{:,.2f}".format(total) }}</span>
+                        </div>
+                        <div class="summary-row-checkout">
+                            <span>Shipping</span>
+                            <span>₱0.00</span>
+                        </div>
+                        <div class="summary-row-checkout">
+                            <span>Estimated taxes</span>
+                            <span>₱0.00</span>
+                        </div>
+                        <div class="summary-row-checkout total-row-checkout">
+                            <span>Total</span>
+                            <span>₱{{ "{:,.2f}".format(total) }}</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" form="checkout-form" class="btn-continue-payment">
+                        Continue to Payment
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+
+<style>
+.checkout-page-modern {
+    background: #f5f5f5;
+    min-height: 100vh;
+    padding: 3rem 0;
+}
+
+.breadcrumb-checkout {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-item-checkout {
+    color: #666;
+}
+
+.breadcrumb-item-checkout:not(:last-child)::after {
+    content: ">";
+    margin-left: 0.5rem;
+    color: #999;
+}
+
+.breadcrumb-item-checkout a {
+    color: #666;
+    text-decoration: none;
+}
+
+.breadcrumb-item-checkout.active {
+    color: #000;
+    font-weight: 500;
+}
+
+.checkout-form-wrapper {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 1.5rem;
+}
+
+.form-label-checkout {
+    display: block;
+    font-weight: 500;
+    color: #000;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-control-checkout {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.form-control-checkout:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.shipping-methods-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.shipping-option-card {
+    position: relative;
+}
+
+.shipping-option-label {
+    display: block;
+    padding: 1.25rem;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    width: 100%;
+}
+
+.btn-check:checked + .shipping-option-label {
+    border-color: #000;
+    background: #f9f9f9;
+}
+
+.shipping-option-label:hover {
+    border-color: #999;
+}
+
+.payment-methods-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.form-check-payment {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.form-check-payment:hover {
+    border-color: #999;
+}
+
+.form-check-payment .form-check-input {
+    margin-right: 0.75rem;
+    cursor: pointer;
+}
+
+.form-check-payment .form-check-input:checked {
+    background-color: #000;
+    border-color: #000;
+}
+
+.form-check-label-payment {
+    cursor: pointer;
+    font-weight: 500;
+    color: #000;
+    margin: 0;
+}
+
+.cart-summary-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 2rem;
+}
+
+.cart-summary-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 1.5rem;
+}
+
+.cart-items-summary {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.cart-item-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item-summary:last-child {
+    border-bottom: none;
+}
+
+.cart-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.cart-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.cart-item-name-summary {
+    font-weight: 500;
+    color: #000;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.cart-item-category-summary {
+    color: #666;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.cart-item-price-summary {
+    font-weight: 600;
+    color: #000;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.discount-section-summary {
+    margin-bottom: 1.5rem;
+}
+
+.input-group-discount {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.form-control-discount {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.form-control-discount:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.btn-discount-apply {
+    padding: 0.75rem 1.5rem;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-discount-apply:hover {
+    background: #333;
+}
+
+.order-summary-checkout {
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.summary-row-checkout {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.summary-row-checkout.total-row-checkout {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #000;
+}
+
+.btn-continue-payment {
+    width: 100%;
+    padding: 1rem;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-continue-payment:hover {
+    background: #333;
+}
+
+@media (max-width: 992px) {
+    .cart-summary-card {
+        position: relative;
+        top: 0;
+        margin-top: 2rem;
+    }
+}
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const selects = {
@@ -180,62 +486,124 @@
             barangay: document.getElementById('barangay_name')
         };
 
-        // Only run address logic if the region select exists (Checkout Page)
         if (selects.region) {
             const updateHidden = (key) => {
-                if (selects[key] && selects[key].selectedIndex > 0) {
+                if (selects[key] && selects[key].selectedIndex > 0 && hiddens[key]) {
                     hiddens[key].value = selects[key].options[selects[key].selectedIndex].text;
                 }
             };
 
-            // Load Regions
-            fetch('/get_regions')
-                .then(res => res.json())
+            const baseUrl = window.location.origin;
+            const regionsUrl = baseUrl + '{{ url_for("user.get_regions") }}';
+            const provincesUrl = baseUrl + '{{ url_for("user.get_provinces") }}';
+            const citiesUrl = baseUrl + '{{ url_for("user.get_cities") }}';
+            const barangaysUrl = baseUrl + '{{ url_for("user.get_barangays") }}';
+
+            fetch(regionsUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                    return res.json();
+                })
                 .then(data => {
+                    if (data.error) {
+                        console.error("Region Load Error:", data.error);
+                        return;
+                    }
+                    if (!Array.isArray(data)) {
+                        console.error("Invalid data format:", data);
+                        return;
+                    }
+                    while (selects.region.options.length > 1) {
+                        selects.region.remove(1);
+                    }
                     data.forEach(item => {
-                        selects.region.add(new Option(item.region_name, item.region_code));
+                        if (item.region_name && item.region_code) {
+                            selects.region.add(new Option(item.region_name, item.region_code));
+                        }
                     });
                 })
-                .catch(err => console.error("Region Load Error:", err));
+                .catch(err => {
+                    console.error("Region Load Error:", err);
+                });
 
-            // Listeners for changes
             selects.region.onchange = () => {
+                if (!selects.region.value) return;
                 updateHidden('region');
                 selects.province.disabled = false;
                 selects.province.innerHTML = '<option value="" selected disabled>Select Province</option>';
-                fetch('/get_provinces')
-                    .then(res => res.json())
+                selects.city.disabled = true;
+                selects.city.innerHTML = '<option value="" selected disabled>Select City</option>';
+                selects.barangay.disabled = true;
+                selects.barangay.innerHTML = '<option value="" selected disabled>Select Barangay</option>';
+                
+                fetch(provincesUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                        return res.json();
+                    })
                     .then(data => {
+                        if (data.error || !Array.isArray(data)) return;
                         data.filter(p => p.region_code === selects.region.value)
-                            .forEach(p => selects.province.add(new Option(p.province_name, p.province_code)));
-                    });
+                            .forEach(p => {
+                                if (p.province_name && p.province_code) {
+                                    selects.province.add(new Option(p.province_name, p.province_code));
+                                }
+                            });
+                    })
+                    .catch(err => console.error("Province Load Error:", err));
             };
 
             selects.province.onchange = () => {
+                if (!selects.province.value) return;
                 updateHidden('province');
                 selects.city.disabled = false;
                 selects.city.innerHTML = '<option value="" selected disabled>Select City</option>';
-                fetch('/get_cities')
-                    .then(res => res.json())
+                selects.barangay.disabled = true;
+                selects.barangay.innerHTML = '<option value="" selected disabled>Select Barangay</option>';
+                
+                fetch(citiesUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                        return res.json();
+                    })
                     .then(data => {
+                        if (data.error || !Array.isArray(data)) return;
                         data.filter(c => c.province_code === selects.province.value)
-                            .forEach(c => selects.city.add(new Option(c.city_name, c.city_code)));
-                    });
+                            .forEach(c => {
+                                if (c.city_name && c.city_code) {
+                                    selects.city.add(new Option(c.city_name, c.city_code));
+                                }
+                            });
+                    })
+                    .catch(err => console.error("City Load Error:", err));
             };
 
             selects.city.onchange = () => {
+                if (!selects.city.value) return;
                 updateHidden('city');
                 selects.barangay.disabled = false;
                 selects.barangay.innerHTML = '<option value="" selected disabled>Select Barangay</option>';
-                fetch('/get_barangays')
-                    .then(res => res.json())
+                
+                fetch(barangaysUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                        return res.json();
+                    })
                     .then(data => {
+                        if (data.error || !Array.isArray(data)) return;
                         data.filter(b => b.city_code === selects.city.value)
-                            .forEach(b => selects.barangay.add(new Option(b.brgy_name, b.brgy_code)));
-                    });
+                            .forEach(b => {
+                                if (b.brgy_name && b.brgy_code) {
+                                    selects.barangay.add(new Option(b.brgy_name, b.brgy_code));
+                                }
+                            });
+                    })
+                    .catch(err => console.error("Barangay Load Error:", err));
             };
 
             selects.barangay.onchange = () => updateHidden('barangay');
         }
     });
 </script>
+
+{% endblock %}

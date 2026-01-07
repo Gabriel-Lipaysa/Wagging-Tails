@@ -355,7 +355,9 @@ def show_orders():
     if check:
         return check
     
-    orders = db.query_all("""
+    status_filter = request.args.get('status', 'all')
+    
+    query = """
         SELECT 
             o.id, 
             o.user_id, 
@@ -371,8 +373,20 @@ def show_orders():
             o.created_at
         FROM orders o
         JOIN users u ON o.user_id = u.id
-        ORDER BY o.created_at DESC
-    """)
+    """
+    params = []
+    
+    if status_filter and status_filter != 'all':
+        if status_filter == 'in_progress':
+            query += " WHERE o.status IN ('Shipped', 'On Delivery')"
+        elif status_filter == 'Declined':
+            query += " WHERE o.status = 'Declined'"
+        else:
+            query += " WHERE o.status = %s"
+            params.append(status_filter)
+    
+    query += " ORDER BY o.created_at DESC"
+    orders = db.query_all(query, tuple(params) if params else ())
     
     for order in orders:
         if order['created_at']:
@@ -380,9 +394,19 @@ def show_orders():
                 dt = datetime.strptime(order['created_at'][:19], '%Y-%m-%d %H:%M:%S')
             else:
                 dt = order['created_at']
-            order['formatted_date'] = dt.strftime('%b %d, %Y %I:%M %p')
+            order['formatted_date'] = dt.strftime('%B %d, %Y')
         else:
             order['formatted_date'] = 'Unknown'
+
+        # Fetch order items (products_list) to match user side
+        order['products_list'] = db.query_all("""
+            SELECT oi.quantity, oi.price, p.name, p.image
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = %s
+        """, (order['id'],))
+
+        order['extra_items'] = max(0, len(order['products_list']) - 1)
 
     return render_template('admin/orders/index.html', orders=orders)
 
