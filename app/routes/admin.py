@@ -152,7 +152,7 @@ def toggle_user_status(id):
     try:
         db.execute("UPDATE users SET is_active=%s, updated_at=NOW() WHERE id=%s", 
                   (new_status, id))
-        
+                
         flash(f'User {user["name"]} ({user["username"]}) has been {status_text} successfully!', 'success')
         
     except Exception as e:
@@ -165,7 +165,7 @@ def show_products():
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
     if check:
         return check
-
+    
     dogFoods = db.query_all("SELECT * FROM products WHERE category='Dog Food' AND is_active=1")
     catFoods = db.query_all("SELECT * FROM products WHERE category='Cat Food' AND is_active=1")
 
@@ -215,7 +215,6 @@ def store_product():
     try:
         db.execute("INSERT INTO products (name, brand ,description, price, quantity, image, category, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,1)", 
                   (name, brand, description, price, quantity, rel_path, category))
-        db.session.commit()
         
     except Exception as e:
         if rel_path:

@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 
 user = Blueprint('user',__name__)
 
-@user.route('/', methods=['GET', 'POST'])
+@user.route('/login/user', methods=['GET', 'POST'])
 def show_user_login():
 
     if session.get('role') == 'user':
@@ -25,6 +25,8 @@ def show_user_login():
         if user and user['password'] == password and user['is_active'] == 1:
             session['user_id'] = user['id']
             session['role'] = 'user'
+            session['name'] = user['name'].split().pop(0)
+            print(session['name'])
             session['email'] = email
             flash('User logged in successfully!', 'success')
             return redirect(url_for('user.home'))
@@ -91,28 +93,22 @@ def user_logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('user.show_user_login'))
 
-@user.route('/home', methods=['GET'])
+@user.route('/', methods=['GET'])
 def home():
-    check = require_role('user', 'user.show_user_login', 'user.show_user_login')
-    if check:
-        return check
         
     uid = session.get('user_id')
-
+    
     query = """
-        SELECT p.*, 
-        CASE WHEN w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
-        FROM products p 
-        LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
-        WHERE p.category = %s LIMIT 3
-    """
+    SELECT p.*, 
+    CASE WHEN %s IS NOT NULL AND w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+    FROM products p 
+    LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+    WHERE p.category = %s LIMIT 3"""
+    
+    dog_products = db.query_all(query, (uid, uid, 'Dog Food'))
+    cat_products = db.query_all(query, (uid, uid, 'Cat Food'))
 
-    dog_products = db.query_all(query, (uid, 'Dog Food'))
-    cat_products = db.query_all(query, (uid, 'Cat Food'))
-    all_products = db.query_all("SELECT * FROM products") 
-
-    return render_template('user/home.html', 
-                           all_p=all_products, 
+    return render_template('user/home.html',  
                            dog_p=dog_products, 
                            cat_p=cat_products)
 
@@ -580,3 +576,24 @@ def order_stream():
             time.sleep(3)
 
     return Response(event_stream(), mimetype="text/event-stream")
+
+@user.route('/search')
+def search():
+    query_text = request.args.get('q', '').strip()
+    uid = session.get('user_id')
+
+    if query_text:
+
+        sql = """
+            SELECT p.*, 
+            CASE WHEN %s IS NOT NULL AND w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
+            FROM products p 
+            LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
+            WHERE (p.name LIKE %s OR p.category LIKE %s OR p.description LIKE %s) AND p.is_active = 1
+        """
+        search_term = f"%{query_text}%"
+        results = db.query_all(sql, (uid, uid, search_term, search_term, search_term))
+    else:
+        results = []
+
+    return render_template('user/search.html', products=results, query=query_text)

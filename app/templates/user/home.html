@@ -57,10 +57,11 @@
             <p class="fs-3 fw-bold" style="color: #6a705d;">Top Picks in Cat Food</p>
         </div>
         
-        <div class="row g-4 mb-5 mx-1 justify-content-between">
-            {% for product in cat_p %}
-                {{product_card(product)}}
-            {% endfor %}     
+        <div class="row g-4"> {% for product in cat_p %}
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                <div class="h-100"> {{ product_card(product) }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
