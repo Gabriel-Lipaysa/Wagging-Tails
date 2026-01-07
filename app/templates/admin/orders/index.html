@@ -27,7 +27,7 @@
                     <th>Customer Name</th>
                     <th>Total Price (₱)</th>
                     <th>Status</th>
-                    <th>Created At</th>
+                    <th>Ordered At</th>
                     <th style="width: 320px;">Actions</th>
                 </tr>
             </thead>
@@ -45,7 +45,7 @@
                         <td class="text-center text-muted">{{ order.formatted_date }}</td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
-                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </button>
 
@@ -58,7 +58,7 @@
                                     </select>
                                 </form>
 
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ order.id }}">
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#declineModal{{ order.id }}" title="Decline">
                                     <i class="bi bi-x-circle-fill"></i>
                                 </button>
                             </div>
@@ -108,7 +108,7 @@
                     <th>Customer Name</th>
                     <th>Total Price (₱)</th>
                     <th>Status</th>
-                    <th>Created At</th>
+                    <th>Progressed At</th>
                     <th style="width: 280px;">Actions</th>
                 </tr>
             </thead>
@@ -131,11 +131,10 @@
                         <td class="text-center text-muted">{{ order.formatted_date }}</td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2 align-items-center flex-wrap">
-                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </button>
 
-                                <!-- Dropdown kept for In Progress orders -->
                                 <form action="{{ url_for('admin.update_order_status', id=order.id) }}" method="POST" class="d-inline mb-0">
                                     <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="Pending">Pending</option>
@@ -169,7 +168,7 @@
                     <th>Customer Name</th>
                     <th>Total Price (₱)</th>
                     <th>Status</th>
-                    <th>Created At</th>
+                    <th>Delivered/Declined At</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -194,7 +193,7 @@
                         </td>
                         <td class="text-center text-muted">{{ order.formatted_date }}</td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}">
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal{{ order.id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </td>
@@ -241,10 +240,13 @@
                 <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
 
                 <h6 class="mt-4">Payment Screenshot:</h6>
-                {% if order.payment_screenshot %}
-                    <img src="/uploads/payments/{{ order.payment_screenshot }}" class="img-fluid rounded border" style="max-height: 400px;">
+                {% if order.payment_screenshot and order.payment_screenshot != 'none' %}
+                    <img src="{{ url_for('static', filename=order.payment_screenshot) }}" 
+                         class="img-fluid rounded border shadow-sm mt-2" 
+                         alt="Payment proof for order #{{ order.id }}" 
+                         style="max-height: 500px; max-width: 100%;">
                 {% else %}
-                    <p class="text-muted">No screenshot uploaded</p>
+                    <p class="text-muted mb-0">No screenshot uploaded</p>
                 {% endif %}
             </div>
             <div class="modal-footer">

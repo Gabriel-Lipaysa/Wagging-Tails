@@ -72,18 +72,17 @@
                         </div>
 
                         <div class="col-6 col-md-3 mt-3 mt-md-0 text-md-center">
-                            <span class="badge rounded-pill px-3 py-2" 
-                                  data-order-id="{{ order.id }}"
-                                  style="font-size: 0.7rem; 
-                                         background-color: 
-                                         {% if order.status == 'Pending' %}#CB997E
-                                         {% elif order.status == 'Shipped' %}#6a705d
-                                         {% elif order.status == 'On Delivery' %}#A8DADC
-                                         {% elif order.status == 'Delivered' %}#d4edda
-                                         {% elif order.status == 'Declined' %}#f8d7da
-                                         {% else %}#5A604D{% endif %};">
-                                {{ order.status }}
-                            </span>
+                            <span class="badge rounded-pill px-3 py-2 
+             {% if order.status == 'Pending' %}bg-warning text-dark
+             {% elif order.status == 'Shipped' %}bg-primary
+             {% elif order.status == 'On Delivery' %}bg-info text-dark
+             {% elif order.status == 'Delivered' %}bg-success
+             {% elif order.status == 'Declined' %}bg-danger
+             {% else %}bg-secondary{% endif %}"
+      data-order-id="{{ order.id }}"
+      style="font-size: 0.7rem;">
+    {{ order.status }}
+</span>
 
                             {% if order.status == 'Declined' and order.decline_reason %}
                             <div class="mt-2 small text-danger fw-medium decline-reason">
