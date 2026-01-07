@@ -137,12 +137,9 @@
 
 </html>
 
-<script>
-
-    // --- 1. GLOBAL FUNCTIONS ---
-    
+<script>    
     window.loadWishlistItems = function() {
-        fetch("/wishlist/items") // You will create this route next
+        fetch("/wishlist/items") 
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('wishlist-items');
@@ -175,36 +172,27 @@
         });
     };
 
-    // Function to update the number shown in the PDP input field
     window.adjustPDPQuantity = function(change) {
         const qtyInput = document.getElementById('pdp-quantity');
         let currentQty = parseInt(qtyInput.value);
         let newQty = currentQty + change;
 
-        // Prevent quantity from going below 1
         if (newQty >= 1) {
             qtyInput.value = newQty;
         }
     };
 
-    // Function to call the UPSERT logic with the chosen quantity
     window.addToCartFromPDP = function(productId) {
         const qty = parseInt(document.getElementById('pdp-quantity').value);
         
-        // Use your existing upSert function
-        // mode 'add' ensures it adds to the current cart quantity
         window.upSert(productId, qty, 'add');
         
-        // Optional: Reset quantity to 1 after adding
         document.getElementById('pdp-quantity').value = 1;
     };
-    // Helper to move item to cart and refresh both sidebars
     window.addToCartFromWishlist = function(productId) {
         upSert(productId, 1, 'add'); 
     };
 
-    // This function handles BOTH single trash icon clicks AND the bulk remove button
-    // UPDATED: Now updates ALL hearts on the page instantly after toggle
     window.toggleWishlist = function(productId, btnElement) {
         fetch(`/wishlist/toggle/${productId}`, {
             method: 'POST'
@@ -214,7 +202,6 @@
             return response.json();
         })
         .then(data => {
-            // 1. Update the Icon on the Product Card (if btnElement exists)
             if (btnElement) {
                 const icon = btnElement.querySelector('i');
                 if (data.status === 'added') {
@@ -223,8 +210,6 @@
                     icon.classList.replace('bi-heart-fill', 'bi-heart');
                 }
             }
-
-            // 2. Update ALL heart icons for this product ID on the page
             const isWishlisted = data.is_wishlisted;
             const newIconClass = isWishlisted ? 'bi-heart-fill' : 'bi-heart';
             document.querySelectorAll(`i[data-product-id="${productId}"]`).forEach(icon => {
@@ -253,7 +238,6 @@
             $.ajax({
                 url: '/cart/items/remove-selected',
                 method: 'POST',
-                // Ensure data key matches the Python getlist('selected_items[]')
                 data: { 'selected_items[]': idList }, 
                 success: function () {
                     loadCartItems();
@@ -265,17 +249,15 @@
         }
     };
 
-    // Wrapper for the trash icon onclick attribute
     window.removeSingleItem = function(id) {
-        window.removeCartItems([id]); // Wraps the single ID in an array
+        window.removeCartItems([id]); 
     };
 
-    // The Single Source of Truth for Cart Changes
     window.upSert = function(productId, qty, mode) {
         let formData = new FormData();
         formData.append('product_id', productId);
         formData.append('quantity', qty);
-        formData.append('mode', mode); // 'add' (increment) or 'set' (overwrite)
+        formData.append('mode', mode); 
 
         fetch('/cart/items/upsert', { 
             method: 'POST', 
@@ -284,7 +266,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                loadCartItems(); // Refresh the UI
+                loadCartItems(); 
             } else {
                 alert(data.error || "Action failed");
             }
@@ -292,7 +274,6 @@
         .catch(err => console.error("Cart Error:", err));
     }
 
-    // Logic for Sidebar +/- Buttons
     window.updateQuantity = function(cartId, productId, action) {
         const quantityInput = document.getElementById('quantity-' + cartId);
         if (!quantityInput) return;
@@ -301,7 +282,6 @@
         let newQuantity = (action === 'increase') ? currentQuantity + 1 : currentQuantity - 1;
 
         if (newQuantity >= 1) {
-            // We use 'set' mode here to overwrite the DB with the new exact number
             window.upSert(productId, newQuantity, 'set');
         }
     };
@@ -322,7 +302,6 @@
         return Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.getAttribute('data-id'));
     };
 
-    // --- 2. LOADERS ---
 
     function loadCartItems() {
         $.ajax({
@@ -351,8 +330,8 @@
                                     <div class="card-body d-flex justify-content-between p-1">
                                         <img src="${imagePath}" class="rounded" style="object-fit:cover; width:80px; height:80px;">
                                         <div class="d-flex flex-column flex-grow-1 px-3">
-                                            <p class="fw-semibold mb-0">${item.name}</p>
-                                            <p class="fw-normal small mb-2">₱${item.price}</p>
+                                            <p class="fw-semibold mb-0" style='color:black !important;'>${item.name}</p>
+                                            <p class="fw-normal small mb-2" style='color:black !important;'>₱${item.price}</p>
                                             <div class="d-flex flex-row align-items-center">
                                                 <div class="input-group input-group-sm border rounded" style="max-width: 100px; border-color: #6a705d !important;">
                                                     <button class="btn btn-sm" onclick="updateQuantity(${item.id}, ${item.product_id}, 'decrease')">-</button>
@@ -381,10 +360,8 @@
         });
     }
 
-    // --- 3. DOM READY ---
 
     document.addEventListener('DOMContentLoaded', function () {
-        // --- 1. CART & WISHLIST INITIALIZATION ---
         loadCartItems();
 
         const wishlistSidebar = document.getElementById('wishlistSidebar');
@@ -392,10 +369,7 @@
             loadWishlistItems();
         });
 
-        
-
-        // --- 3. BUTTONS (Cart Page) ---
-        document.getElementById('remove-selected')?.addEventListener('click', function () {
+            document.getElementById('remove-selected')?.addEventListener('click', function () {
             const selectedItems = getSelectedItems(); 
             window.removeCartItems(selectedItems);
         });
@@ -410,10 +384,8 @@
             }
         });
 
-        // --- 5. ORDER HISTORY LOGIC ---
         const detailContainers = document.querySelectorAll('.collapse');
         detailContainers.forEach(container => {
-            // When the details open
             container.addEventListener('show.bs.collapse', function () {
                 const orderId = this.id.split('-')[1];
                 const btn = document.querySelector(`[data-bs-target="#details-${orderId}"]`);
@@ -422,7 +394,6 @@
                 }
             });
 
-            // When the details close
             container.addEventListener('hide.bs.collapse', function () {
                 const orderId = this.id.split('-')[1];
                 const btn = document.querySelector(`[data-bs-target="#details-${orderId}"]`);
