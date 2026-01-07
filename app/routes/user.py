@@ -103,7 +103,7 @@ def home():
     CASE WHEN %s IS NOT NULL AND w.id IS NOT NULL THEN 1 ELSE 0 END as is_wishlisted 
     FROM products p 
     LEFT JOIN wishlists w ON p.id = w.product_id AND w.user_id = %s
-    WHERE p.category = %s LIMIT 3"""
+    WHERE p.category = %s LIMIT 4"""
     
     dog_products = db.query_all(query, (uid, uid, 'Dog Food'))
     cat_products = db.query_all(query, (uid, uid, 'Cat Food'))

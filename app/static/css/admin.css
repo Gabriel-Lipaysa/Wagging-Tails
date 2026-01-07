@@ -182,7 +182,7 @@ body {
 }
 
 @media print {
-    
+
     .sidebar, .navbar, .admin-footer, .no-print {
         display: none !important;
     }
