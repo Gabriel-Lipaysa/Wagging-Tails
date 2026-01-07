@@ -510,7 +510,6 @@ def order_history():
     params = [uid]
 
     if status_filter != 'all':
-        # Match exact status (case-sensitive now)
         query += " AND o.status = %s"
         params.append(status_filter)
 

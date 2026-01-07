@@ -61,7 +61,6 @@ def dashboard():
         "SELECT COUNT(*) as count FROM products WHERE is_active=1"
     ) or {'count': 0})['count']
 
-    # ADD THIS: Count pending orders
     pending_orders = (db.query_one(
         "SELECT COUNT(*) as count FROM orders WHERE status='Pending'"
     ) or {'count': 0})['count']
@@ -70,9 +69,8 @@ def dashboard():
                          total_users=total_users, 
                          inactive_users=inactive_users,
                          total_products=total_products,
-                         pending_orders=pending_orders)  # Pass it to template
+                         pending_orders=pending_orders)
 
-from datetime import datetime
 
 @admin.route('/admin/users', methods=['GET'])
 def show_users():
@@ -88,9 +86,22 @@ def show_users():
         ORDER BY created_at DESC
     """, (current_admin_id,))
 
-    # Add formatted current time
+    for user in users:
+        if user['created_at']:
+            if isinstance(user['created_at'], str):
+
+                try:
+                    dt = datetime.strptime(user['created_at'][:19], '%Y-%m-%d %H:%M:%S')
+                except:
+                    dt = datetime.strptime(user['created_at'][:10], '%Y-%m-%d')
+            else:
+                dt = user['created_at']
+            user['joined_date'] = dt.strftime('%b %d, %Y')  # e.g., Jan 07, 2026
+        else:
+            user['joined_date'] = 'Unknown'
+
     now = datetime.now()
-    last_updated = now.strftime('%b %d, %Y %I:%M %p')  # e.g., Jan 05, 2026 02:30 PM
+    last_updated = now.strftime('%b %d, %Y %I:%M %p')
 
     return render_template('admin/users/index.html', users=users, last_updated=last_updated)
 
@@ -105,16 +116,14 @@ def reset_user_password(id):
         flash('User not found.', 'warning')
         return redirect(url_for('admin.show_users'))
     
-    # Generate a simple default password
+    # Ginawa lang naming simple, para mas maalala ng users. Possible output is = Password123_LOW (username = lowes). 
+    
     default_password = f"Password123_{user['username'][:3].upper()}"
     
     try:
-        # Hash the password before storing
         hashed_password = generate_password_hash(default_password)
         db.execute("UPDATE users SET password=%s, updated_at=NOW() WHERE id=%s", 
                   (hashed_password, id))
-        
-        # REMOVED: db.session.commit()  <-- This line caused the error
         
         flash(f'Password reset successfully for {user["name"]}. New password: {default_password}', 'success')
         
@@ -134,6 +143,8 @@ def toggle_user_status(id):
         flash('User not found.', 'warning')
         return redirect(url_for('admin.show_users'))
     
+    # if status ni user is 1 then user is activated, if 0 deactivated.
+
     current_status = user['is_active']
     new_status = 0 if current_status == 1 else 1
     status_text = 'activated' if new_status == 1 else 'deactivated'
@@ -141,8 +152,6 @@ def toggle_user_status(id):
     try:
         db.execute("UPDATE users SET is_active=%s, updated_at=NOW() WHERE id=%s", 
                   (new_status, id))
-        
-        # REMOVED: db.session.commit()  <-- This line caused the error
         
         flash(f'User {user["name"]} ({user["username"]}) has been {status_text} successfully!', 'success')
         
@@ -156,8 +165,7 @@ def show_products():
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
     if check:
         return check
-    
-    # Fetch only active products and show the "Low Stock" status for relevant products
+
     dogFoods = db.query_all("SELECT * FROM products WHERE category='Dog Food' AND is_active=1")
     catFoods = db.query_all("SELECT * FROM products WHERE category='Cat Food' AND is_active=1")
 
@@ -208,12 +216,6 @@ def store_product():
         db.execute("INSERT INTO products (name, brand ,description, price, quantity, image, category, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,1)", 
                   (name, brand, description, price, quantity, rel_path, category))
         db.session.commit()
-        
-        # Log the action
-        db.execute("""
-            INSERT INTO admin_logs (admin_id, action, details, created_at) 
-            VALUES (%s, 'create_product', %s, NOW())
-        """, (session['user_id'], f'Created new product: {name}'))
         
     except Exception as e:
         if rel_path:
@@ -303,12 +305,6 @@ def update_product(id):
                   (name, brand, description, price_val, quantity_val, final_image, category, id))
         db.session.commit()
         
-        # Log the action
-        db.execute("""
-            INSERT INTO admin_logs (admin_id, action, details, created_at) 
-            VALUES (%s, 'update_product', %s, NOW())
-        """, (session['user_id'], f'Updated product: {name}'))
-        
     except Exception as e:
         if new_path:
             try:
@@ -344,15 +340,8 @@ def delete_product(id):
         return redirect(url_for('admin.dashboard'))
     
     try:
-        # Soft delete by setting is_active = 0
         db.execute('UPDATE products SET is_active=0, updated_at=NOW() WHERE id=%s', (id,))
         db.session.commit()
-        
-        # Log the action
-        db.execute("""
-            INSERT INTO admin_logs (admin_id, action, details, created_at) 
-            VALUES (%s, 'delete_product', %s, NOW())
-        """, (session['user_id'], f'Deleted product: {product["name"]}'))
         
         flash('Product deleted successfully!', 'success')
     except Exception as e:
@@ -396,9 +385,6 @@ def show_orders():
             order['formatted_date'] = 'Unknown'
 
     return render_template('admin/orders/index.html', orders=orders)
-
-
-# REMOVED: approve_order route completely
 
 
 @admin.route('/admin/orders/<int:id>/update-status', methods=['POST'])
@@ -468,8 +454,7 @@ def view_order(id):
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
     if check:
         return check
-    
-    # Fetch order details
+
     order = db.query_one("""
         SELECT o.*, u.name AS customer_name, u.email 
         FROM orders o
@@ -481,7 +466,6 @@ def view_order(id):
         flash('Order not found.', 'warning')
         return redirect(url_for('admin.show_orders'))
     
-    # Fetch order items
     items = db.query_all("""
         SELECT oi.*, p.name AS product_name, p.image
         FROM order_items oi
@@ -489,7 +473,7 @@ def view_order(id):
         WHERE oi.order_id=%s
     """, (id,))
     
-    # Format date
+
     if order['created_at']:
         dt = order['created_at'] if not isinstance(order['created_at'], str) else datetime.strptime(order['created_at'], '%Y-%m-%d %H:%M:%S')
         order['formatted_date'] = dt.strftime('%b %d, %Y %I:%M %p')
