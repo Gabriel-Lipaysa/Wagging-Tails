@@ -1591,6 +1591,20 @@ a{
     background: #dc3545;
 }
 
+.stock-info-container {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.stock-quantity-display {
+    display: flex;
+    align-items: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
 .product-description {
     color: #666;
     line-height: 1.8;
