@@ -183,14 +183,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         badge.textContent = order.status;
 
-        const colors = {
-            'Pending': '#CB997E',
-            'Shipped': '#6a705d',
-            'On Delivery': '#A8DADC',
-            'Delivered': '#d4edda',
-            'Declined': '#f8d7da'
+        // Remove all Bootstrap background and text color classes
+        badge.classList.remove('bg-warning', 'bg-primary', 'bg-info', 'bg-success', 'bg-danger', 'bg-secondary', 'text-dark', 'text-white');
+
+        // Set colors based on status
+        const statusColors = {
+            'Pending': { bg: '#ffc107', text: '#000' },  // bg-warning equivalent
+            'Shipped': { bg: '#0d6efd', text: '#fff' },  // bg-primary equivalent
+            'On Delivery': { bg: '#0dcaf0', text: '#000' },  // bg-info equivalent
+            'Delivered': { bg: '#198754', text: '#fff' },  // bg-success equivalent
+            'Declined': { bg: '#dc3545', text: '#fff' }   // bg-danger equivalent
         };
-        badge.style.backgroundColor = colors[order.status] || '#5A604D';
+
+        const colors = statusColors[order.status] || { bg: '#6c757d', text: '#fff' };
+        badge.style.backgroundColor = colors.bg;
+        badge.style.color = colors.text;
 
         let reasonDiv = badge.parentNode.querySelector('.decline-reason');
         if (order.status === 'Declined' && order.decline_reason) {
