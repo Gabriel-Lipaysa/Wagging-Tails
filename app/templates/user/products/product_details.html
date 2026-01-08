@@ -2,18 +2,24 @@
 {% from 'macros/card_macros.html' import product_card %}
 {% block content %}
 
-<div class="container mt-5 pt-5">
-    <div class="row g-5 position-relative">
-        <div class="col-md-7">
-            <div class="card border-0 shadow-sm p-4 mb-4 position-relative overflow-hidden" style="border-radius: 20px;">
-                <img src="{{ url_for('static', filename=product.image) }}" class="img-fluid" alt="{{ product.name }}" style="max-height: 500px; object-fit: contain;">
-                {% if product.quantity == 0 %}
-                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                         style="background-color: rgba(0, 0, 0, 0.65); z-index: 2;">
-                        <h2 class="text-white fw-bold mb-0" 
-                            style="font-size: 3.5rem; text-shadow: 3px 3px 12px rgba(0,0,0,0.9);">
-                            Out of Stock
-                        </h2>
+<div class="product-details-page" style="background: #ffffff; min-height: 100vh; padding: 3rem 0;">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Product Image Section -->
+            <div class="col-lg-6">
+                <div class="product-image-container position-relative">
+                    {% if product.quantity == 0 %}
+                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                             style="background-color: rgba(0, 0, 0, 0.7); z-index: 2; border-radius: 20px;">
+                            <h2 class="text-white fw-bold mb-0" style="font-size: 3rem;">
+                                Out of Stock
+                            </h2>
+                        </div>
+                    {% endif %}
+                    <div class="product-image-wrapper-detail">
+                        <img src="{{ url_for('static', filename=product.image) }}" 
+                             class="product-main-image" 
+                             alt="{{ product.name }}">
                     </div>
                 {% endif %}
             </div>
@@ -25,79 +31,97 @@
 
         </div>
 
-        <div class="col-md-5">
-            <div id="floating-info" class="sticky-top" style="top: 40px; transition: opacity 0.4s ease, transform 0.4s ease; z-index: 1;">
-                <h5 style="font-size: small; letter-spacing: 2px;">{{product['brand'].upper()}}</h5>
-                <div class="d-flex justify-content-between align-items-start">
-                    <h1 class="display-6 fw-bold" style="color: #5A604D;">{{ product.name }}</h1>
-                    
-                    <!-- Main Product Wishlist Heart (AJAX - Instant Update) -->
-                    <button class="btn btn-outline-danger border-0 shadow-none" 
-                            onclick="toggleWishlist({{ product.id }}, this)">
-                        <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-3 wishlist-heart"
-                           data-product-id="{{ product.id }}"></i>
-                    </button>
-                </div>
-                
-                <h2 class="mb-4" style="color: #CB997E !important;">₱{{ "{:,.2f}".format(product.price) }}</h2>
-                
-                <hr>
-                
-                <div class="my-4">
-                    {% if product.quantity == 0 %}
-                        <span class="badge bg-danger p-2">Out of Stock</span>
-                    {% elif product.quantity <= 5 %}
-                        <span class="badge bg-warning text-dark p-2">Low Stock ({{ product.quantity }})</span>
-                    {% else %}
-                        <span class="badge bg-success p-2">In Stock ({{ product.quantity }})</span>
-                    {% endif %}
-                </div>
-
-                <div class="d-flex align-items-center mb-4">
-                    <span class="me-3 fw-bold" style="color: #6a705d;">Quantity:</span>
-                    <div class="input-group border rounded" style="max-width: 140px; border-color: #6a705d !important;">
-                        <input type="number"
-                               id="pdp-quantity"
-                               name="quantity"
-                               class="form-control text-center border-0 bg-transparent fw-bold"
-                               value="1"
-                               min="1"
-                               {% if product.quantity > 0 %}
-                                   max="{{ product.quantity }}"
-                               {% else %}
-                                   value="0" disabled
-                               {% endif %}
-                               style="appearance: none; -moz-appearance: textfield; width: 60px;">
+            <!-- Product Details Section -->
+            <div class="col-lg-6">
+                <div class="product-details-content">
+                    <p class="product-brand mb-2">{{product.get('brand', 'Wagging Wonders').upper()}}</p>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="product-title-detail">{{ product.name }}</h1>
+                        <button class="btn btn-link p-0 wishlist-btn-detail" 
+                                onclick="toggleWishlist({{ product.id }}, this)"
+                                style="color: #dc3545;">
+                            <i class="bi {{ 'bi-heart-fill' if product.is_wishlisted else 'bi-heart' }} fs-3 wishlist-heart"
+                               data-product-id="{{ product.id }}"></i>
+                        </button>
                     </div>
-                </div>
-
-                <div class="d-grid gap-2 mt-4">
-                    <button id="pdp-add-to-cart" 
-                            class="btn btn-lg py-3 fw-bold" 
-                            style="background-color: {% if product.quantity > 0 %}#6B705C{% else %}#999999{% endif %}; 
-                                   color: white; 
-                                   border-radius: 5px;
-                                   cursor: {% if product.quantity == 0 %}not-allowed{% else %}pointer{% endif %};"
-                            onclick="{% if product.quantity > 0 %}addToCartFromPDP({{ product.id }}){% endif %}"
-                            {% if product.quantity == 0 %}disabled{% endif %}>
-                        {% if product.quantity > 0 %}
-                            Add to Cart
+                    
+                    <div class="product-price-section mb-4">
+                        <span class="product-price-current">₱{{ "{:,.2f}".format(product.price) }}</span>
+                    </div>
+                    
+                    <div class="product-availability mb-4">
+                        {% if product.quantity == 0 %}
+                            <div class="availability-badge unavailable">
+                                <span class="availability-dot"></span>
+                                <span>Out of Stock</span>
+                            </div>
+                        {% elif product.quantity <= 5 %}
+                            <div class="availability-badge low-stock">
+                                <span class="availability-dot"></span>
+                                <span>Low Stock ({{ product.quantity }} left)</span>
+                            </div>
                         {% else %}
-                            Out of Stock
+                            <div class="availability-badge available">
+                                <span class="availability-dot"></span>
+                                <span>Available</span>
+                            </div>
                         {% endif %}
-                    </button>
+                    </div>
+                    
+                    <div class="product-description mb-4">
+                        <p>{{ product.description or 'Made from high-quality, premium materials, this product provides excellent value for your pet. Designed with care and attention to detail.' }}</p>
+                    </div>
+                    
+                    <div class="product-features mb-4">
+                        <div class="feature-tags">
+                            <span class="feature-tag">Premium Quality</span>
+                            <span class="feature-tag">Pet Safe</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions-expanded mb-4">
+                        <div class="add-to-cart-expanded">
+                            <div class="cart-quantity-controls">
+                                <button class="cart-quantity-btn" onclick="adjustPDPQuantity(-1)" {% if product.quantity == 0 %}disabled{% endif %}>
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                                <input type="number" 
+                                       id="pdp-quantity"
+                                       class="cart-quantity-input"
+                                       value="1"
+                                       min="1"
+                                       {% if product.quantity > 0 %}max="{{ product.quantity }}"{% else %}disabled{% endif %}
+                                       readonly>
+                                <button class="cart-quantity-btn" onclick="adjustPDPQuantity(1)" {% if product.quantity == 0 %}disabled{% endif %}>
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            <button id="pdp-add-to-cart" 
+                                    class="btn-add-to-cart-expanded"
+                                    onclick="{% if product.quantity > 0 %}addToCartFromPDP({{ product.id }}){% endif %}"
+                                    {% if product.quantity == 0 %}disabled{% endif %}>
+                                <i class="bi bi-cart-plus me-2"></i>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div id="related-products" class="mt-5 pt-5 border-top pb-5">
-        <h3 class="fw-bold mb-4" style="color: #5A604D;">Related Products</h3>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4"> 
-            {% for p in related_products %}
-                {{ product_card(p) }}
-            {% endfor %}
+        
+        <!-- Related Products Section -->
+        {% if related_products %}
+        <div id="related-products" class="mt-5 pt-5" style="background: linear-gradient(135deg, #6a705d 0%, #5a604d 100%); padding: 3rem 2rem !important; border-radius: 20px;">
+            <h3 class="fw-bold mb-4 text-white">Related Products</h3>
+            <div class="row g-4"> 
+                {% for p in related_products %}
+                    <div class="col-md-3 col-sm-6">
+                        {{ product_card(p) }}
+                    </div>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

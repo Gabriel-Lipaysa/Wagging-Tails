@@ -14,114 +14,136 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/user.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg px-4">
-        <div class="container-fluid">
-            <a class="navbar-brand mx-auto d-flex align-items-center py-0" href="/">
-            <span class="logo-text">Wagging Wonders</span>
-        </a>
+    <nav class="navbar navbar-expand-lg navbar-modern">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="logo-container">
+                    <i class="bi bi-heart-pulse-fill me-2 logo-icon"></i>
+                    <span class="logo-text">Wagging Wonders</span>
+                </div>
+            </a>
 
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <form class="d-flex flex-grow-1 justify-content-center" action="{{ url_for('user.search') }}" method="GET">
-            <div class="input-group" style="max-width: 600px; width: 100%;">
-                <span class="input-group-text"><i class="bi-search"></i></span>
-                <input type="search" name="q" class="form-control text-start" placeholder="Search products...">
-                <button type="submit" class="btn btn-filter">Search</button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto nav-links-center">
+                    <form class="d-flex flex-grow-1 justify-content-center" action="{{ url_for('user.search') }}" method="GET">
+                        <div class="input-group" style="max-width: 600px; width: 100%;">
+                            <span class="input-group-text"><i class="bi-search"></i></span>
+                            <input type="search" name="q" class="form-control text-start" placeholder="Search products...">
+                            <button type="submit" class="btn btn-filter">Search</button>
+                        </div>
+                    </form>   
+                </ul>
+
+                <div class="d-flex align-items-center nav-actions">
+                    <ul class="navbar-nav d-flex flex-row gap-4">
+                        {% if session.get('user_id') and session.get('role') == 'user' %}
+                        
+                        <li class="nav-item">
+                            <a class="nav-link nav-icon-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#wishlistSidebar" title="Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </a>
+                        </li>
+
+                        <li class="nav-item position-relative">
+                            <a href="#" class="nav-link nav-icon-link" data-bs-toggle="offcanvas" data-bs-target="#cartSidebar"
+                                aria-controls="cartSidebar" title="Shopping Cart">
+                                <i class="bi bi-cart3"></i>
+                                <span id="cart-count" class="cart-badge">
+                                    {{ cart_count or 0 }}
+                                </span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle user-dropdown" href="#" id="profileDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle me-1"></i>
+                                {{ user }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-modern" aria-labelledby="profileDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('user.order_history', status='all') }}">
+                                    <i class="bi bi-bag-check me-2"></i>My Orders</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('user.user_logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                        
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn-signin" href="/">
+                                Sign in
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
-        </form>
-        
-        <div class="d-flex align-items-center">
-            <ul class="navbar-nav d-flex flex-row gap-3">
-                {% if session.get('user_id') and session.get('role') == 'user' %}
-                
-                <li class="nav-item">
-                    <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#wishlistSidebar">
-                        <i class="bi bi-heart fs-5 text-danger"></i>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="#" class="nav-link" data-bs-toggle="offcanvas" data-bs-target="#cartSidebar"
-                        aria-controls="cartSidebar">
-                        <i class="bi bi-cart fs-5"></i>
-                        <span id="cart-count" class="badge position-absolute top-50 mt-2 translate-middle rounded-pill bg-danger">
-                            {{ cart_count or 0 }}
-                        </span>
-                    </a>
-                </li>
-                
-                
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ session.get('name')}}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('user.order_history', status='all') }}">My Orders</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('user.user_logout') }}"><i class="bi bi-box-arrow-in-right"></i> Logout</a></li>
-                        </ul>
-                    </li>
-                
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/login/user">Login</a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
         </div>
     </nav>
 
     <!-- Wishlist Sidebar (Offcanvas) -->
-    <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="wishlistSidebar" aria-labelledby="wishlistSidebarLabel" style="width: 400px; color: #6a705d !important">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="logo-text mb-0" style="color: #6a705d;" id="wishlistSidebarLabel">My Wishlist</h5>
+    <div class="offcanvas offcanvas-end d-flex flex-column sidebar-modern" tabindex="-1" id="wishlistSidebar" aria-labelledby="wishlistSidebarLabel">
+        <div class="offcanvas-header sidebar-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-heart-fill me-2 sidebar-icon"></i>
+                <h5 class="logo-text mb-0 sidebar-title" id="wishlistSidebarLabel">My Wishlist</h5>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
-        <div class="px-4 py-2 bg-light border-bottom d-flex justify-content-between small fw-bold text-muted">
-            <span style="color: #6a705d;">SAVED PRODUCTS</span>
+        <div class="sidebar-section-header">
+            <span class="section-label">SAVED PRODUCTS</span>
         </div>
 
-        <div class="offcanvas-body flex-grow-1" id="wishlist-items" style="overflow-y: auto;">
-            </div>
+        <div class="offcanvas-body flex-grow-1 sidebar-body" id="wishlist-items">
+        </div>
 
-        <div class="offcanvas-footer border-top p-3 bg-white">
+        <div class="offcanvas-footer sidebar-footer">
             <div class="d-grid gap-2">
-                <button class="btn py-2 fw-bold" style="background-color: #6a705d; color: white;" data-bs-dismiss="offcanvas">
-                    CONTINUE SHOPPING
+                <button class="btn btn-primary-modern py-3 fw-semibold" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-arrow-left me-2"></i>Continue Shopping
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Cart Sidebar (Offcanvas) -->
-    <div class="offcanvas offcanvas-end d-flex flex-column" tabindex="-1" id="cartSidebar" aria-labelledby="cartSidebarLabel" style="width: 400px; color: #6a705d !important">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="logo-text mb-0" style="color: #6a705d;" id="cartSidebarLabel">Your Cart</h5>
+    <div class="offcanvas offcanvas-end d-flex flex-column sidebar-modern" tabindex="-1" id="cartSidebar" aria-labelledby="cartSidebarLabel">
+        <div class="offcanvas-header sidebar-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-cart3 me-2 sidebar-icon"></i>
+                <h5 class="logo-text mb-0 sidebar-title" id="cartSidebarLabel">Your Cart</h5>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
-        <div class="px-4 py-2 bg-light border-bottom d-flex justify-content-between small fw-bold text-muted">
-            <span style="color: #6a705d;">PRODUCT</span>
-            <span style="color: #6a705d;">TOTAL</span>
+        <div class="sidebar-section-header">
+            <span class="section-label">PRODUCT</span>
+            <span class="section-label">TOTAL</span>
         </div>
 
-        <div class="offcanvas-body flex-grow-1" id="cart-items" style="overflow-y: auto;">
-            </div>
+        <div class="offcanvas-body flex-grow-1 sidebar-body" id="cart-items">
+        </div>
 
-        <div class="offcanvas-footer border-top p-3 bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="fw-bold h5 mb-0">Estimated Total:</span>
-                <span class="fw-bold h5 mb-0" style="color: #CB997E;">₱<span id="cart-total-price">0.00</span></span>
+        <div class="offcanvas-footer sidebar-footer">
+            <div class="cart-total-wrapper mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="cart-total-label">Estimated Total:</span>
+                    <span class="cart-total-amount">₱<span id="cart-total-price">0.00</span></span>
+                </div>
             </div>
             
             <div class="d-grid gap-2">
-                <button class="btn py-2 fw-bold" id="buy-selected" style="color: white; display: none;">
-                    CHECKOUT SELECTED
+                <button class="btn btn-primary-modern py-3 fw-semibold" id="buy-selected" style="display: none;">
+                    <i class="bi bi-bag-check me-2"></i>Checkout Selected
                 </button>
-                <button class="btn btn-sm btn-outline-danger" id="remove-selected" style="display: none;">
-                    Remove Selected
+                <button class="btn btn-outline-danger-modern py-2" id="remove-selected" style="display: none;">
+                    <i class="bi bi-trash me-2"></i>Remove Selected
                 </button>
             </div>
         </div>
@@ -132,6 +154,9 @@
     </main>
 
     {% block scripts %}{% endblock %}
+
+    <!-- Snackbar container -->
+    <div id="snackbar-container" aria-live="polite" aria-atomic="true"></div>
 
 </body>
 
@@ -148,17 +173,17 @@
             if (data.length > 0) {
                 data.forEach(item => {
                     container.innerHTML += `
-                        <div class="card mb-3 shadow-sm border rounded bg-light p-2" style="border-color: #6a705d !important;">
-                            <div class="card-body d-flex justify-content-between p-1">
-                                <img src="/static/${item.image}" class="rounded" style="object-fit:cover; width:80px; height:80px;">
-                                <div class="d-flex flex-column flex-grow-1 px-3">
-                                    <p class="fw-semibold mb-0" style="color: #6a705d;">${item.name}</p>
-                                    <p class="fw-bold mb-2" style="color: #CB997E;">₱${item.price.toLocaleString()}</p>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm text-white" style="background-color: #CB997E;" onclick="addToCartFromWishlist(${item.product_id})">
-                                            <i class="bi bi-cart-plus"></i>
+                        <div class="sidebar-item-card">
+                            <div class="sidebar-item-content">
+                                <img src="/static/${item.image}" class="sidebar-item-image" alt="${item.name}">
+                                <div class="sidebar-item-details">
+                                    <p class="sidebar-item-name">${item.name}</p>
+                                    <p class="sidebar-item-price">₱${item.price.toLocaleString()}</p>
+                                    <div class="sidebar-item-actions">
+                                        <button class="btn btn-sm btn-primary-modern" onclick="addToCartFromWishlist(${item.product_id})" title="Add to Cart">
+                                            <i class="bi bi-cart-plus me-1"></i>Add to Cart
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleWishlist(${item.product_id}, null)">
+                                        <button class="btn btn-sm btn-outline-danger-modern" onclick="toggleWishlist(${item.product_id}, null)" title="Remove">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -167,18 +192,29 @@
                         </div>`;
                 });
             } else {
-                container.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-heart fs-1"></i><p>Your wishlist is empty</p></div>`;
+                container.innerHTML = `<div class="sidebar-empty-state">
+                    <i class="bi bi-heart sidebar-empty-icon"></i>
+                    <p class="sidebar-empty-text">Your wishlist is empty</p>
+                    <p class="sidebar-empty-subtext">Start adding products you love!</p>
+                </div>`;
             }
         });
     };
 
     window.adjustPDPQuantity = function(change) {
         const qtyInput = document.getElementById('pdp-quantity');
-        let currentQty = parseInt(qtyInput.value);
+        if (!qtyInput) return;
+        
+        let currentQty = parseInt(qtyInput.value) || 1;
+        let maxQty = parseInt(qtyInput.getAttribute('max')) || 999;
         let newQty = currentQty + change;
 
         if (newQty >= 1) {
             qtyInput.value = newQty;
+        } else if (newQty < 1) {
+            qtyInput.value = 1;
+        } else if (newQty > maxQty) {
+            qtyInput.value = maxQty;
         }
     };
 
@@ -221,16 +257,23 @@
             if (wishlistSidebar && wishlistSidebar.classList.contains('show')) {
                 loadWishlistItems();
             }
+
+            // Notify user
+            if (data.status === 'added') {
+                window.notify('Added to wishlist', 'success');
+            } else {
+                window.notify('Removed from wishlist', 'info');
+            }
         })
         .catch(err => {
-            alert("Please login to manage your wishlist!");
+            window.notify("Please login to manage your wishlist!", 'warning');
             window.location.href = "/login/user";
         });
     };
 
     window.removeCartItems = function(idList) {
         if (!idList || idList.length === 0) {
-            alert("Please select items to remove.");
+            window.notify("Please select items to remove.", 'warning');
             return;
         }
 
@@ -241,9 +284,10 @@
                 data: { 'selected_items[]': idList }, 
                 success: function () {
                     loadCartItems();
+                    window.notify('Removed item(s) from cart', 'info');
                 },
                 error: function () {
-                    alert('Failed to remove items.');
+                    window.notify('Failed to remove items.', 'danger');
                 }
             });
         }
@@ -266,9 +310,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                loadCartItems(); 
+                loadCartItems(); // Refresh the UI
+                window.notify(mode === 'add' ? 'Added to cart' : 'Updated quantity', 'success');
             } else {
-                alert(data.error || "Action failed");
+                window.notify(data.error || "Action failed", 'danger');
             }
         })
         .catch(err => console.error("Cart Error:", err));
@@ -322,36 +367,44 @@
                         itemCount += item.quantity;
                         const imagePath = `/static/${item.image}`; 
                         cartItemsContainer.innerHTML += ` 
-                            <div class="d-flex flex-row align-items-center mb-3">
-                                <div class="form-check me-2">
-                                    <input type="checkbox" class="form-check-input select-item fs-5" data-id="${item.id}" onchange="toggleSelection()">
+                            <div class="sidebar-item-card">
+                                <div class="form-check cart-checkbox">
+                                    <input type="checkbox" class="form-check-input select-item" data-id="${item.id}" onchange="toggleSelection()">
                                 </div>
-                                <div class="card shadow-sm border rounded bg-light p-2 flex-grow-1" style="border-color: #6a705d !important; color: #6a705d !important;">
-                                    <div class="card-body d-flex justify-content-between p-1">
-                                        <img src="${imagePath}" class="rounded" style="object-fit:cover; width:80px; height:80px;">
-                                        <div class="d-flex flex-column flex-grow-1 px-3">
-                                            <p class="fw-semibold mb-0" style='color:black !important;'>${item.name}</p>
-                                            <p class="fw-normal small mb-2" style='color:black !important;'>₱${item.price}</p>
-                                            <div class="d-flex flex-row align-items-center">
-                                                <div class="input-group input-group-sm border rounded" style="max-width: 100px; border-color: #6a705d !important;">
-                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, ${item.product_id}, 'decrease')">-</button>
-                                                    <input type="text" id="quantity-${item.id}" class="form-control text-center border-0 bg-transparent" value="${item.quantity}" readonly>
-                                                    <button class="btn btn-sm" onclick="updateQuantity(${item.id}, ${item.product_id}, 'increase')">+</button>
-                                                </div>
-                                                <button class="btn btn-link p-0 ms-2" onclick="removeSingleItem(${item.id})">
-                                                    <i class="bi bi-trash fs-5 text-danger"></i>
+                                <div class="sidebar-item-content">
+                                    <img src="${imagePath}" class="sidebar-item-image" alt="${item.name}">
+                                    <div class="sidebar-item-details">
+                                        <p class="sidebar-item-name">${item.name}</p>
+                                        <p class="sidebar-item-price-unit">₱${item.price.toLocaleString()}</p>
+                                        <div class="sidebar-item-controls">
+                                            <div class="quantity-control">
+                                                <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.product_id}, 'decrease')" title="Decrease">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <input type="text" id="quantity-${item.id}" class="quantity-input" value="${item.quantity}" readonly>
+                                                <button class="quantity-btn" onclick="updateQuantity(${item.id}, ${item.product_id}, 'increase')" title="Increase">
+                                                    <i class="bi bi-plus"></i>
                                                 </button>
                                             </div>
+                                            <button class="btn-remove-item" onclick="removeSingleItem(${item.id})" title="Remove item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
-                                        <div class="text-end fw-medium">₱${(item.price * item.quantity).toFixed(2)}</div>
+                                    </div>
+                                    <div class="sidebar-item-total">
+                                        <span class="item-total-price">₱${(item.price * item.quantity).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                                     </div>
                                 </div>
                             </div>`;
                     });
-                    totalDisplay.textContent = total.toFixed(2);
+                    totalDisplay.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2});
                     cartCountBadge.textContent = itemCount;
                 } else {
-                    cartItemsContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-cart-x fs-1"></i><p>Your cart is empty</p></div>`;
+                    cartItemsContainer.innerHTML = `<div class="sidebar-empty-state">
+                        <i class="bi bi-cart-x sidebar-empty-icon"></i>
+                        <p class="sidebar-empty-text">Your cart is empty</p>
+                        <p class="sidebar-empty-subtext">Add some products to get started!</p>
+                    </div>`;
                     totalDisplay.textContent = "0.00";
                     cartCountBadge.textContent = "0";
                 }
@@ -403,4 +456,42 @@
             });
         });
     });
+
+    // --- 6. SNACKBAR / TOAST ---
+    window.notify = function(message, type = 'success') {
+        const container = document.getElementById('snackbar-container');
+        if (!container) return;
+
+        const snack = document.createElement('div');
+        snack.className = `snackbar snackbar-${type}`;
+        snack.role = 'status';
+        snack.textContent = message;
+        snack.addEventListener('click', () => snack.remove());
+        container.appendChild(snack);
+
+        // Allow transition
+        requestAnimationFrame(() => snack.classList.add('show'));
+
+        setTimeout(() => {
+            snack.classList.remove('show');
+            setTimeout(() => snack.remove(), 200);
+        }, 3500);
+    };
 </script>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+<script id="flashed-json" type="application/json">{{ messages|tojson }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        const raw = document.getElementById('flashed-json')?.textContent || '[]';
+        const flashed = JSON.parse(raw);
+        flashed.forEach(function(item){
+            const category = item[0] || 'info';
+            const text = item[1] || '';
+            if (text) window.notify(text, category);
+        });
+    } catch(e) {}
+});
+ </script>
+{% endwith %}
