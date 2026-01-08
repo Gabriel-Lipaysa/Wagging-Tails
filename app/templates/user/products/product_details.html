@@ -21,8 +21,15 @@
                              class="product-main-image" 
                              alt="{{ product.name }}">
                     </div>
-                </div>
+                {% endif %}
             </div>
+            
+            <div class="mb-5">
+                <h5 class="fw-bold">Description</h5>
+                <p class="text-muted">{{ product.description }}</p>
+            </div>
+
+        </div>
 
             <!-- Product Details Section -->
             <div class="col-lg-6">

@@ -2260,6 +2260,9 @@ a{
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid #eee;
+  
+#orderFilters .nav-link.active {
+    background-color: #6a705d; 
 }
 
 .detail-label {
@@ -2295,6 +2298,11 @@ a{
     background: #e9ecef;
     border-color: #6a705d;
     color: #5a604d;
+  
+.step-active {
+    background-color: #CB997E !important;
+    border-color: #CB997E !important;
+    color: white !important;
 }
 
 .breakdown-box {
@@ -2327,6 +2335,16 @@ a{
     font-weight: 500;
     color: #333;
     margin-bottom: 0.25rem;
+.stepper-wrapper {
+    margin-bottom: 2rem;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.btn-link:focus {
+    box-shadow: none;
 }
 
 .breakdown-item-qty {
@@ -2369,7 +2387,6 @@ a{
     text-transform: uppercase;
 }
 
-/* Brand Filter Buttons */
 .btn-filter {
     border-radius: 8px;
     font-size: 0.85rem;
@@ -2388,7 +2405,6 @@ a{
     box-shadow: 0 4px 6px rgba(203, 153, 126, 0.2);
 }
 
-/* Row Hover Effect */
 .order-row-card:hover {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
 }
@@ -2531,3 +2547,16 @@ html {
 .snackbar-info { background: #4a5043; }
 .snackbar-warning { background: #CB997E; }
 .snackbar-danger { background: #dc3545; }
+.form-check-input:checked {
+    background-color: #CB997E !important;
+    border-color: #CB997E !important;
+}
+
+.form-check-input:focus {
+    border-color: #CB997E !important;
+    box-shadow: 0 0 0 0.25rem rgba(203, 153, 126, 0.25) !important;
+}
+
+.form-check-input {
+    border-color: #CB997E;
+}

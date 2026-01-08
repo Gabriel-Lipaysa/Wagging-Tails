@@ -1,12 +1,11 @@
-from flask import render_template, session, redirect, flash, url_for, request, Blueprint, app, current_app
+from flask import render_template, session, redirect, flash, url_for, request, Blueprint, current_app
 from app import db
-from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
-import os, uuid
+import os
 from app.utils.auth import require_role
 from app.utils.save_upload import save_upload
 from app.routes.user import show_user_login
-from datetime import datetime
+from datetime import datetime, timedelta
 
 admin = Blueprint('admin', __name__)
 
@@ -152,7 +151,7 @@ def toggle_user_status(id):
     try:
         db.execute("UPDATE users SET is_active=%s, updated_at=NOW() WHERE id=%s", 
                   (new_status, id))
-        
+                
         flash(f'User {user["name"]} ({user["username"]}) has been {status_text} successfully!', 'success')
         
     except Exception as e:
@@ -165,7 +164,7 @@ def show_products():
     check = require_role('admin', 'admin.admin_login', 'user.show_user_login')
     if check:
         return check
-
+    
     dogFoods = db.query_all("SELECT * FROM products WHERE category='Dog Food' AND is_active=1")
     catFoods = db.query_all("SELECT * FROM products WHERE category='Cat Food' AND is_active=1")
 
@@ -215,7 +214,6 @@ def store_product():
     try:
         db.execute("INSERT INTO products (name, brand ,description, price, quantity, image, category, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,1)", 
                   (name, brand, description, price, quantity, rel_path, category))
-        db.session.commit()
         
     except Exception as e:
         if rel_path:
@@ -503,3 +501,50 @@ def view_order(id):
         order['formatted_date'] = dt.strftime('%b %d, %Y %I:%M %p')
     
     return render_template('admin/orders/view.html', order=order, items=items)
+
+
+@admin.route('/reports', methods=['GET'])
+def sales_report():
+    report_type = request.args.get('type', 'daily')
+    now = datetime.now()
+    
+    if report_type == 'daily':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        title = f"Daily Sales Report - {now.strftime('%B %d, %Y')}"
+    elif report_type == 'weekly':
+        start_date = now - timedelta(days=7)
+        title = "Weekly Sales Report"
+    else: 
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        title = f"Monthly Sales Report - {now.strftime('%B %Y')}"
+
+    query_orders = """
+        SELECT o.id, o.total_price, o.payment_method, o.status, o.created_at, u.name as customer_name
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        WHERE o.created_at >= %s AND o.status NOT IN ('Pending', 'Declined')
+        ORDER BY o.created_at DESC
+    """
+    orders = db.query_all(query_orders, (start_date,))
+
+    query_products = """
+        SELECT p.name, SUM(oi.quantity) as qty, SUM(oi.price * oi.quantity) as total_revenue
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.created_at >= %s AND o.status NOT IN ('Pending', 'Declined')
+        GROUP BY p.id
+        ORDER BY qty DESC LIMIT 5
+    """
+    top_products = db.query_all(query_products, (start_date,))
+
+    total_rev = sum(item['total_price'] for item in orders)
+    total_orders = len(orders)
+
+    return render_template('admin/sales.html', 
+                           orders=orders, 
+                           top_products=top_products, 
+                           total_rev=total_rev, 
+                           total_orders=total_orders,
+                           title=title,
+                           now=now)

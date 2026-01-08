@@ -81,13 +81,8 @@
         </div>
         {% endif %}
         
-        <!-- Top Picks in Cat Food -->
-        {% if cat_p %}
-        <div class="mb-5">
-            <h3 class="text-white fw-bold mb-4">
-                <i class="bi bi-star-fill me-2" style="color: #CB997E;"></i>Top Picks in Cat Food
-            </h3>
-            <div class="row g-4">
+        <div class="px-3 d-flex flex-column ">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
                 {% for product in cat_p %}
                     {{product_card(product)}}
                 {% endfor %}
