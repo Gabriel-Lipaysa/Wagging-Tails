@@ -301,7 +301,6 @@ def update_product(id):
     try:
         db.execute("UPDATE products SET name=%s, brand=%s, description=%s, price=%s, quantity=%s, image=%s, category=%s, updated_at=NOW() WHERE id=%s", 
                   (name, brand, description, price_val, quantity_val, final_image, category, id))
-        db.session.commit()
         
     except Exception as e:
         if new_path:
@@ -339,7 +338,6 @@ def delete_product(id):
     
     try:
         db.execute('UPDATE products SET is_active=0, updated_at=NOW() WHERE id=%s', (id,))
-        db.session.commit()
         
         flash('Product deleted successfully!', 'success')
     except Exception as e:

@@ -73,19 +73,30 @@
             <h3 class="text-white fw-bold mb-4">
                 <i class="bi bi-star-fill me-2" style="color: #CB997E;"></i>Top Picks in Dog Food
             </h3>
-            <div class="row g-4">
-                {% for product in dog_p %}
-                    {{product_card(product)}}
-                {% endfor %}
+            
+            <div class="px-3 d-flex flex-column ">
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+                    {% for product in dog_p %}
+                        <div class="col"> 
+                            {{ product_card(product) }}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         {% endif %}
         
+        {% if cat_p %}
+         <h3 class="text-white fw-bold mb-4">
+            <i class="bi bi-star-fill me-2" style="color: #CB997E;"></i>Top Picks in Cat Food
+        </h3>
         <div class="px-3 d-flex flex-column ">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
                 {% for product in cat_p %}
-                    {{product_card(product)}}
-                {% endfor %}
+                        <div class="col"> 
+                            {{ product_card(product) }}
+                        </div>
+                    {% endfor %}
             </div>
         </div>
         {% endif %}
