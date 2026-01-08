@@ -75,7 +75,7 @@
                         
                         {% else %}
                         <li class="nav-item">
-                            <a class="nav-link btn-signin" href="/">
+                            <a class="nav-link btn-signin" href="/signup">
                                 Sign in
                             </a>
                         </li>
@@ -206,15 +206,27 @@
         if (!qtyInput) return;
         
         let currentQty = parseInt(qtyInput.value) || 1;
-        let maxQty = parseInt(qtyInput.getAttribute('max')) || 999;
+        let maxQty = parseInt(qtyInput.getAttribute('max')) || parseInt(qtyInput.getAttribute('data-max')) || 999;
         let newQty = currentQty + change;
 
-        if (newQty >= 1) {
-            qtyInput.value = newQty;
-        } else if (newQty < 1) {
-            qtyInput.value = 1;
+        // Enforce limits
+        if (newQty < 1) {
+            newQty = 1;
         } else if (newQty > maxQty) {
-            qtyInput.value = maxQty;
+            newQty = maxQty;
+        }
+
+        qtyInput.value = newQty;
+
+        // Update button states
+        const minusBtn = document.getElementById('pdp-minus-btn');
+        const plusBtn = document.getElementById('pdp-plus-btn');
+        
+        if (minusBtn) {
+            minusBtn.disabled = (newQty <= 1);
+        }
+        if (plusBtn) {
+            plusBtn.disabled = (newQty >= maxQty);
         }
     };
 
@@ -455,6 +467,22 @@
                 }
             });
         });
+
+        // Initialize PDP quantity controls
+        const pdpQtyInput = document.getElementById('pdp-quantity');
+        if (pdpQtyInput) {
+            const maxQty = parseInt(pdpQtyInput.getAttribute('max')) || parseInt(pdpQtyInput.getAttribute('data-max')) || 999;
+            const currentQty = parseInt(pdpQtyInput.value) || 1;
+            const minusBtn = document.getElementById('pdp-minus-btn');
+            const plusBtn = document.getElementById('pdp-plus-btn');
+            
+            if (minusBtn) {
+                minusBtn.disabled = (currentQty <= 1);
+            }
+            if (plusBtn) {
+                plusBtn.disabled = (currentQty >= maxQty || maxQty <= 1);
+            }
+        }
     });
 
     // --- 6. SNACKBAR / TOAST ---
